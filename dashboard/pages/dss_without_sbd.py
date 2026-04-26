@@ -1,4 +1,3 @@
-import random
 from dash import callback, html, register_page, dcc, Input, Output, State, MATCH, dash_table, no_update
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
@@ -6,6 +5,7 @@ import polars as pl
 from data import TO_HOP, BANG_CHON_MON
 from utils.build_script import display_graph_and_table
 from utils.naming import naming_without_sbd
+from utils.persistent import make_persistent
 
 
 
@@ -26,9 +26,14 @@ def input_num(id : str, **kwargs):
     return dbc.Input(
         id = naming_without_sbd(id),
         type = "number",
-        min = 0, max = 10, value = 0,
+        min = 0, 
+        max = 10, 
+        value = 0,
         step = 0.01,
         className = "text-center shadow-sm border-primary-subtle",
+        persistence=True,
+        persistence_type='local',
+        persisted_props=['value'],
         **kwargs
     )
 
@@ -39,15 +44,31 @@ left_layout = html.Div([
     # BƯỚC 1: NHẬP ĐIỂM
     dbc.Card([
         dbc.CardHeader(
-            html.Div([html.I(className="bi bi-pencil-fill me-2"), "Điểm dự kiến của bạn"]),
+            html.Div([
+                html.I(className="bi bi-pencil-fill me-2"), 
+                "Điểm dự kiến của bạn"
+            ]),
             className="fw-bold bg-primary text-white"
         ),
         dbc.CardBody([
             # Năm xét tuyển (Làm gọn)
             dbc.Row([
-                dbc.Label("Năm xét tuyển", width=6, className="small fw-bold"),
+                dbc.Label(
+                    "Năm xét tuyển", 
+                    width=6, 
+                    className="small fw-bold"
+                ),
                 dbc.Col(
-                    dbc.Input(id=naming_without_sbd("year"), type="number", min=2025, max=2025, value=2025, className="text-center"), 
+                    make_persistent(
+                        dbc.Input(
+                            id=naming_without_sbd("year"), 
+                            type="number", 
+                            min=2025, 
+                            max=2025, 
+                            value=2025, 
+                            className="text-center"
+                        ) 
+                    ),
                     width=6
                 ),
             ], className="mb-3 g-2 align-items-center"),
@@ -57,112 +78,206 @@ left_layout = html.Div([
             # Khu vực nhập điểm
             html.Div([
                 dbc.Row([
-                    dbc.Col(html.Label("Toán", className="fw-bold mb-0"), width=6),
-                    dbc.Col(input_num("math"), width=6),
+                    dbc.Col(
+                        html.Label("Toán", className="fw-bold mb-0"), 
+                        width=6
+                    ),
+                    dbc.Col(
+                        input_num("math"), 
+                        width=6
+                    ),
                 ], className="mb-2 align-items-center"),
                 
                 dbc.Row([
-                    dbc.Col(html.Label("Văn", className="fw-bold mb-0"), width=6),
-                    dbc.Col(input_num("literature"), width=6),
+                    dbc.Col(
+                        html.Label("Văn", className="fw-bold mb-0"), 
+                        width=6
+                    ),
+                    dbc.Col(
+                        input_num("literature"), 
+                        width=6
+                    ),
                 ], className="mb-2 align-items-center"),
 
                 dbc.Row([
-                    dbc.Col(dcc.Dropdown(options=BANG_CHON_MON, value="Lý", id=naming_without_sbd("mon-1"), clearable=False), width=6),
-                    dbc.Col(input_num("diem-mon-1"), width=6),
+                    dbc.Col(
+                        make_persistent(
+                            dcc.Dropdown(
+                                options=BANG_CHON_MON, 
+                                value="Lí", 
+                                id=naming_without_sbd("mon-1"), 
+                                clearable=False
+                            )
+                        ), width=6),
+                    dbc.Col(
+                        input_num("diem-mon-1"), 
+                        width=6
+                    ),
                 ], className="mb-2 align-items-center"),
 
                 dbc.Row([
-                    dbc.Col(dcc.Dropdown(id=naming_without_sbd("mon-2"), placeholder="Chọn môn 2", clearable=False), width=6),
-                    dbc.Col(input_num("diem-mon-2"), width=6),
-                ], className="mb-4 align-items-center"),
+                    dbc.Col(
+                        make_persistent(
+                            dcc.Dropdown(
+                                id=naming_without_sbd("mon-2"),
+                                options=[x for x in BANG_CHON_MON if x["value"] != "Lí"],
+                                value="Hóa",
+                                clearable=False,
+                                placeholder="Chọn môn 2"
+                            )
+                        ),
+                        width=6
+                    ),
+                    dbc.Col(
+                        input_num("diem-mon-2"),
+                        width=6
+                    ),
+                ], className="mb-4 align-items-center")
             ], className="px-1"),
 
             dbc.Button(
                 "Tính toán điểm tổ hợp", 
                 id=naming_without_sbd("build-combs"),
-                color="primary", className="w-100 fw-bold shadow-sm py-2"
+                color="primary", 
+                className="w-100 fw-bold shadow-sm py-2"
             )
         ])  
     ], className="border-0 shadow-sm mb-3"),
 
-    html.Div(id=naming_without_sbd("error"), className="mb-2"),
+
+    html.Div(
+        id=naming_without_sbd("error"), 
+        className="mb-2"
+    ),
+
 
     # BƯỚC 2: XÂY DỰNG KỊCH BẢN (Ẩn cho đến khi tính xong)
     dbc.Card([
         dbc.CardHeader(
-            html.Div([html.I(className="bi bi-gear-wide-connected me-2"), "Xây dựng kịch bản"]),
+            html.Div([
+                html.I(className="bi bi-gear-wide-connected me-2"), 
+                "Xây dựng kịch bản"
+            ]),
             className="fw-bold bg-dark text-white"
         ),
 
         dbc.CardBody([
             # Chọn tổ hợp & Điểm
             html.Div([
-                html.Label("Tổ hợp khả dĩ", className="small fw-bold"),
-                dcc.Dropdown(id=naming_without_sbd("your-comb"), className="mb-3"),
-
-                html.Div([
-                    html.Span("Điểm tổ hợp của bạn", className="small text-muted d-block"),
-                    dbc.Input(
-                        id=naming_without_sbd("your-score"),
-                        readonly=True,
-                        className="h4 fw-bold text-primary text-center bg-transparent border-0"
+                html.Label(
+                    "Tổ hợp khả dĩ", 
+                    className="small fw-bold"
+                ),
+                make_persistent(
+                    dcc.Dropdown(
+                        id=naming_without_sbd("your-comb"), 
+                        className="mb-3"
                     ),
+                ),
+                html.Div([
+                    html.Span(
+                        "Điểm tổ hợp của bạn", 
+                        className="small text-muted d-block"
+                    ),
+                    make_persistent(
+                        dbc.Input(
+                            id=naming_without_sbd("your-score"),
+                            readonly=True,
+                            className="h4 fw-bold text-primary text-center bg-transparent border-0"
+                        )
+                    )
                 ], className="p-2 mb-3 bg-light rounded-3 border-dashed text-center"),
             ]),
 
-            dcc.Store(id=naming_without_sbd("stored-results")),
+            make_persistent(
+                dcc.Store(
+                    id=naming_without_sbd("stored-results")
+                )
+            ),
 
             # Chọn điểm sàn (Kết hợp Input và Slider)
-            html.Label("Thiết lập điểm sàn", className="fw-bold small mb-2"),
+            html.Label(
+                "Thiết lập điểm sàn", 
+                className="fw-bold small mb-2"
+            ),
             dbc.Row([
                 dbc.Col(
-                    dbc.Input(id=naming_without_sbd("floor-score-input"), type="number", step=0.05, className="text-center shadow-sm"),
+                    make_persistent(
+                        dbc.Input(
+                            id=naming_without_sbd("floor-score-input"), 
+                            type="number", 
+                            step=0.05, 
+                            className="text-center shadow-sm"
+                        ),
+                    ),
                     width=4
                 ),
                 dbc.Col(
-                    dcc.Slider(
-                        id=naming_without_sbd("floor-score"),
-                        min=15, max=30, step=0.05,
-                        marks={i: str(i) for i in range(15, 31, 5)},
-                        className="mt-2"
+                    make_persistent(
+                        dcc.Slider(
+                            id=naming_without_sbd("floor-score"),
+                            min=15, max=30, step=0.05,
+                            marks={i: str(i) for i in range(15, 31, 5)},
+                            className="mt-2"
+                        )
                     ), width=8
                 )
             ], className="mb-4 align-items-center g-2"),
 
             # Danh sách tổ hợp
             html.Div([
-                html.Label("Tổ hợp so sánh", className="small fw-bold"),
-                html.Div(id=naming_without_sbd("combs-list-container"), className="mb-4 p-2 bg-white rounded border min-vh-10")
+                html.Label(
+                    "Tổ hợp so sánh", 
+                    className="small fw-bold"
+                ),
+                html.Div(
+                    id=naming_without_sbd("combs-list-container"), 
+                    className="mb-4 p-2 bg-white rounded border min-vh-10"
+                )
             ]),
 
             dbc.Button(
                 "Chạy kịch bản phân tích",
                 id=naming_without_sbd("run-scenario"),
-                color="success", className="w-100 py-2 fw-bold shadow"
+                color="success", 
+                className="w-100 py-2 fw-bold shadow"
             )
         ])
-    ], id=naming_without_sbd("scenario"), style={"display": "none"}, className="border-0 shadow-sm")
-], className="sticky-top", style={"top": "1rem"})
+    ], 
+    id=naming_without_sbd("scenario"), 
+    style={"display": "none"}, 
+    className="border-0 shadow-sm"
+)], className="sticky-top", style={"top": "1rem"})
 
 
 
-right_layout = html.Div(id=naming_without_sbd("right-content"))
+right_layout = html.Div(
+    id=naming_without_sbd("right-content")
+)
 
 
 
 layout = dbc.Container([
     dbc.Row([
-        # Cột trái (Nhập liệu)
-        dbc.Col(left_layout, width=12, md=4, className="px-1"),
+        dbc.Col(
+            left_layout, 
+            width=12, 
+            md=4, 
+            className="px-1"
+        ),
         
-        # Cột phải (Kết quả đồ thị/bảng)
         dbc.Col(
             dcc.Loading(
                 id="loading-main",
                 type="circle",
-                children=html.Div(id=naming_without_sbd("right-content"), className="h-100")
+                children=html.Div(
+                    id=naming_without_sbd("right-content"), 
+                    className="h-100"
+                )
             ), 
-            width=12, md=8, className="px-1"
+            width=12, 
+            md=8, 
+            className="px-1"
         )
     ], className="mt-3 mt-md-4 g-4")
 ], fluid=True, className="p-0 px-md-5 pb-5 bg-light")
@@ -175,55 +290,78 @@ layout = dbc.Container([
 #                              CALLBACK 
 # ------------------------------------------------------------------
 
-# CALLBACK 0: Chọn ngẫu nhiên môn 1
-@callback(
-    Output(naming_without_sbd("mon_1"), "value"),
-    Input(naming_without_sbd("mon-1"), "id")
-)
-def chon_mon_1(_):
-    """Khởi tạo ngẫu nhiên môn tự chọn đầu tiên.
-
-    Sử dụng thuật toán random.choice để chọn một môn học từ danh mục cho trước,
-    giúp cải thiện trải nghiệm người dùng bằng cách cung cấp dữ liệu mẫu ngay khi load.
-
-    Args:
-        _: Giá trị ID của thành phần (không sử dụng, dùng để trigger lúc khởi tạo).
-
-    Returns:
-        str: Tên môn học được chọn ngẫu nhiên (ví dụ: 'Vật lý', 'Hóa học').
-    """
-    danh_sach_mon = [m["value"] for m in BANG_CHON_MON]
-    
-    return random.choice(danh_sach_mon)
-
-
-
-
-
 # CALLBACK 1: Khi chọn môn 1 thì môn 2 không trùng môn 1
 @callback(
     [
+        Output(naming_without_sbd("mon-1"), "options"),
+        Output(naming_without_sbd("mon-1"), "value"),
         Output(naming_without_sbd("mon-2"), "options"),
-        Output(naming_without_sbd("mon-2"), "value")
+        Output(naming_without_sbd("mon-2"), "value"),
     ],
     [
-        Input(naming_without_sbd("mon-1"), "value")        
-    ]
+        Input(naming_without_sbd("mon-1"), "value"),
+        Input(naming_without_sbd("mon-2"), "value"),
+    ],
+    prevent_initial_call=False
 )
-def choose_mon_2(mon_1 : str):
-    """Duy trì tính toàn vẹn dữ liệu (Data Integrity) giữa các lựa chọn môn học.
+def sync_subjects(mon_1, mon_2):
+    triggered = ctx.triggered_id
+    all_options = BANG_CHON_MON
 
-    Đảm bảo môn tự chọn thứ 2 không trùng với môn thứ 1, ngăn chặn việc tạo ra
-    các tổ hợp môn không hợp lệ trong hệ thống.
+    # initial load
+    if not triggered:
+        return (
+            [x for x in all_options if x["value"] != "Hóa"],
+            "Lí",
+            [x for x in all_options if x["value"] != "Lí"],
+            "Hóa"
+        )
 
-    Args:
-        mon_1 (str): Tên môn học đã chọn ở ô thứ nhất.
+    # user đổi môn 1
+    if triggered == naming_without_sbd("mon-1"):
+        options_2 = [
+            x for x in all_options
+            if x["value"] != mon_1
+        ]
 
-    Returns:
-        tuple: (list, str) Danh sách các tùy chọn còn lại và giá trị mặc định cho môn thứ 2.
-    """
-    options = [col for col in BANG_CHON_MON if col["value"] != mon_1]
-    return options, options[0]["value"]
+        if mon_2 == mon_1:
+            mon_2 = options_2[0]["value"]
+
+        options_1 = [
+            x for x in all_options
+            if x["value"] != mon_2
+        ]
+
+        return (
+            options_1,
+            mon_1,
+            options_2,
+            mon_2
+        )
+
+    # user đổi môn 2
+    if triggered == naming_without_sbd("mon-2"):
+        options_1 = [
+            x for x in all_options
+            if x["value"] != mon_2
+        ]
+
+        if mon_1 == mon_2:
+            mon_1 = options_1[0]["value"]
+
+        options_2 = [
+            x for x in all_options
+            if x["value"] != mon_1
+        ]
+
+        return (
+            options_1,
+            mon_1,
+            options_2,
+            mon_2
+        )
+
+    return no_update
 
 
 
@@ -231,16 +369,18 @@ def choose_mon_2(mon_1 : str):
 
 # CALLBACK 2: Khi chưa nhấn nút tính điểm tổ hợp
 @callback(
-    Output(naming_without_sbd("build-combs"), "disabled"), # Tác động vào thuộc tính disabled
+    Output(naming_without_sbd("build-combs"), "disabled"),
     [
-        Input(naming_without_sbd("math"), "value"),        # Sửa thành math cho khớp với id ở layout
-        Input(naming_without_sbd("literature"), "value"),  # Sửa thành literature cho khớp
+        Input(naming_without_sbd("math"), "value"),        
+        Input(naming_without_sbd("literature"), "value"),  
         Input(naming_without_sbd("diem-mon-1"), "value"),
         Input(naming_without_sbd("diem-mon-2"), "value")
-    ]
+    ],
+    prevent_initial_call=True
 )
 def validate_btn(toan, van, mon_1, mon_2):
-    """Trình xác thực trạng thái sẵn sàng của hệ thống (System Readiness Validator).
+    """
+    Trình xác thực trạng thái sẵn sàng của hệ thống (System Readiness Validator).
 
     Kiểm tra điều kiện biên cho dữ liệu đầu vào. Nút tính toán chỉ được kích hoạt
     khi tất cả các trường điểm được nhập đầy đủ và không vi phạm quy tắc điểm liệt (<= 1.0).
@@ -273,7 +413,7 @@ def validate_btn(toan, van, mon_1, mon_2):
         Output(naming_without_sbd("error"), "children"),
         Output(naming_without_sbd("your-comb"), "options"),
         Output(naming_without_sbd("your-comb"), "value"),
-        Output(naming_without_sbd("stored-results"), "data"), # Lưu toàn bộ dict vào đây
+        Output(naming_without_sbd("stored-results"), "data"),
     ],
     Input(naming_without_sbd("build-combs"), "n_clicks"),
     [
@@ -412,14 +552,22 @@ def render_scenario_dropdown(main_comb, stored_data):
     if not main_comb or not stored_data:
         return None
     
-    options = [{"label": item["Tên tổ hợp"], "value": item["Tổ hợp"]} for item in TO_HOP.collect().to_dicts()]
-    
-    return dcc.Dropdown(
-        options=options,
-        value=[main_comb],
-        multi=True,
-        clearable=True,
-        id=naming_without_sbd("combs-list"), 
+    options = [
+        {
+            "label": item["Tên tổ hợp"], 
+            "value": item["Tổ hợp"]
+        }
+        for item in stored_data
+    ]
+
+    return make_persistent(
+        dcc.Dropdown(
+            options=options,
+            value=[main_comb],
+            multi=True,
+            clearable=True,
+            id=naming_without_sbd("combs-list"), 
+        )
     )
 
 
@@ -541,11 +689,11 @@ def sync_slider_and_input(slider_val, input_val):
 # CALLBACK chính: 
 @callback(
     Output(naming_without_sbd("right-content"), "children"),
-    Input(naming_without_sbd("run-scenario"), "n_clicks"), # Lắng nghe nút mới
+    Input(naming_without_sbd("run-scenario"), "n_clicks"),
     [
         State(naming_without_sbd("your-score"), "value"),
         State(naming_without_sbd("year"), "value"),
-        State(naming_without_sbd("floor-score"), "value"), # Lúc này Slider trả về số thực
+        State(naming_without_sbd("floor-score"), "value"),
         State(naming_without_sbd("combs-list"), "value"),
         State(naming_without_sbd("stored-results"), "data")
     ],
@@ -572,9 +720,15 @@ def display_analysis_without_sbd(n, main_score_text, year, floor_score, selected
     if not n or not main_score_text or not selected_combs:
         return no_update
 
+    if not stored_data:
+        return dbc.Alert(
+            "Chưa có dữ liệu tổ hợp. Vui lòng tính điểm trước.",
+            color="warning"
+        )
+
     try:
         score_val = float(main_score_text.split()[0])
-        
+
         f_score = float(floor_score)
 
         return display_graph_and_table(
@@ -584,7 +738,9 @@ def display_analysis_without_sbd(n, main_score_text, year, floor_score, selected
             combs=selected_combs,
             mode="raw-score"
         )
+
     except Exception as e:
-        return dbc.Alert(f"Lỗi: {str(e)}", color="danger")    
-
-
+        return dbc.Alert(
+            f"Lỗi: {str(e)}",
+            color="danger"
+        )

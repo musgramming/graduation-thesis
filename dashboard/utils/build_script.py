@@ -59,46 +59,43 @@ def filter_z_score(year: int, floor_score : float, combs : list[str]) -> pl.Lazy
     Returns:
         pl.LazyFrame: Dữ liệu đã chuẩn hóa theo phân phối xác suất.
     """
-    # B1: Lọc dữ liệu cơ bản
     df = BANG_DIEM[year].filter(
-        (pl.col("Tổ hợp").is_in(combs)) &
+        (pl.col("Tổ hợp").is_in(combs)) & 
         (pl.col("Hợp lệ") == True)
     )
     
-    # B2: Quy đổi về thang [~-3, ~3]
+    # Bước 1: Tính Mean và Std theo từng tổ hợp
     stats = df.group_by("Tổ hợp").agg([
         pl.col("Tổng điểm").mean().alias("mean"),
         pl.col("Tổng điểm").std().alias("std")
     ])
     
-    df = df.join(stats, on="Tổ hợp").with_columns(
+    # Bước 2: Tính Z-value
+    df_z = df.join(stats, on="Tổ hợp").with_columns(
         pl.when(pl.col("std") > 0)
-            .then((pl.col("Tổng điểm") - pl.col("mean")) / pl.col("std"))
-            .otherwise(0.0)
-            .alias("z_val")
-    ).drop(["mean", "std"])
+        .then((pl.col("Tổng điểm") - pl.col("mean")) / pl.col("std"))
+        .otherwise(0.0)
+        .alias("z_val")
+    )
 
-    # B3: Quy đổi về thang [0, 30]
-    min_max_z = df.group_by("Tổ hợp").agg([
+    # Bước 3: Ép về thang [0, 30] dựa trên Min/Max thực tế của từng tổ hợp
+    # Điều này đảm bảo 'Top 1' của mọi tổ hợp đều đạt 30 điểm trên Dashboard
+    min_max_z = df_z.group_by("Tổ hợp").agg([
         pl.col("z_val").min().alias("z_min"),
         pl.col("z_val").max().alias("z_max")
     ])
     
-    df = (
-        df.join(min_max_z, on="Tổ hợp")
+    return (
+        df_z.join(min_max_z, on="Tổ hợp")
         .with_columns(
             pl.when(pl.col("z_max") > pl.col("z_min"))
-                .then((pl.col("z_val") - pl.col("z_min")) / (pl.col("z_max") - pl.col("z_min")) * 30)
-                .otherwise(15.0) # 15 là mức trung bình an toàn cho Z-score
-                .alias("Điểm quy đổi")
+            .then((pl.col("z_val") - pl.col("z_min")) / (pl.col("z_max") - pl.col("z_min")) * 30)
+            .otherwise(15.0)
+            .alias("Điểm quy đổi")
         )
-        .drop(["z_min", "z_max", "z_val"])
-        .filter(
-            pl.col("Điểm quy đổi") >= floor_score
-        )
+        .filter(pl.col("Điểm quy đổi") >= floor_score)
+        .drop(["mean", "std", "z_val", "z_min", "z_max"])
     )
-
-    return df
 
 
 
@@ -121,17 +118,19 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
     Returns:
         pl.LazyFrame: Dữ liệu đã được loại bỏ nhiễu từ các điểm số cực đoan.
     """
-    df = BANG_DIEM[year].filter(pl.col("Tổ hợp").is_in(combs))
+    df = BANG_DIEM[year].filter(
+        (pl.col("Tổ hợp").is_in(combs)) & 
+        (pl.col("Hợp lệ") == True)
+    )
     
-    # B1: Tính các chỉ số Robust (Median, Q1, Q3)
+    # Bước 1: Tính Median, Q1, Q3
     stats = df.group_by("Tổ hợp").agg([
         pl.col("Tổng điểm").median().alias("median"),
         pl.col("Tổng điểm").quantile(0.25).alias("q1"),
         pl.col("Tổng điểm").quantile(0.75).alias("q3")
     ])
     
-    # B2: Tính giá trị Robust và quy đổi luôn về thang 30
-    # Công thức: (x - median) / (q3 - q1)
+    # Bước 2: Tính Robust value (r_val)
     df_robust = df.join(stats, on="Tổ hợp").with_columns(
         pl.when(pl.col("q3") > pl.col("q1"))
         .then((pl.col("Tổng điểm") - pl.col("median")) / (pl.col("q3") - pl.col("q1")))
@@ -139,7 +138,8 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
         .alias("r_val")
     )
     
-    # Tìm r_min, r_max để ép về [0, 30]
+    # Bước 3: Tìm r_min, r_max để ép về thang 30
+    # Điều này giúp Dashboard giữ được sự tương quan khi so sánh các khối lệch phổ điểm
     r_limit = df_robust.group_by("Tổ hợp").agg([
         pl.col("r_val").min().alias("r_min"),
         pl.col("r_val").max().alias("r_max")
@@ -154,8 +154,8 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
             .alias("Điểm quy đổi")
         )
         .filter(pl.col("Điểm quy đổi") >= floor_score)
+        .drop(["median", "q1", "q3", "r_val", "r_min", "r_max"])
     )
-
 
 
 
@@ -429,12 +429,11 @@ def display_graph_and_table(year: int, self_score : float,  floor_score : float,
                 dcc.Graph(
                     figure=fig_overall, 
                     config={
-                        'displayModeBar': True,  # Hiện thanh công cụ khi di chuột/chạm vào
-                        'modeBarButtonsToRemove': ['select2d', 'lasso2d'], # Bỏ mấy cái không cần thiết
-                        'scrollZoom': True,      # Cho phép dùng con lăn hoặc hai ngón tay zoom
-                        'displaylogo': False,    # Tắt logo Plotly cho chuyên nghiệp
-                        'responsive': True       # Tự co giãn theo khung
-                    }
+                        'displayModeBar': True,
+                        'scrollZoom': True,
+                        'responsive': True
+                    },
+                    style={"height": "450px"} 
                 )
             ])
         ], className="shadow-sm border-0 mb-4"),

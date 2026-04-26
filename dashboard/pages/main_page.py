@@ -1,6 +1,6 @@
-from dash import html, dcc, register_page
+from dash import html, register_page
 import dash_bootstrap_components as dbc
-from utils.naming import naming_with_sbd, naming_without_sbd # Giả sử hàm naming của bạn ở đây
+
 
 register_page(
     __name__,
@@ -11,63 +11,235 @@ register_page(
 )
 
 
-
 layout = html.Div([
-    # --- PHẦN 1: GIỚI THIỆU BẢN THÂN (ABOUT ME) ---
-    dbc.Container([
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    # Avatar hoặc Icon cá nhân
-                    html.Div(html.I(className="bi bi-person-workspace display-1 text-primary"), className="mb-4"),
-                    html.H1("Hi, mình là Mus", className="fw-bold display-4"),
-                    html.P([
-                        "Sinh viên năm cuối ngành ", html.B("Hệ thống thông tin"), " (IS). ",
-                        "Một người yêu sự chính xác của dữ liệu và sự tinh tế của âm nhạc cổ điển."
-                    ], className="lead text-secondary"),
-                    html.Div([
-                        dbc.Badge("Data Visualization", color="primary", className="me-2 p-2"),
-                        dbc.Badge("Polars Enthusiast", color="dark", className="p-2"),
-                    ], className="mb-4"),
-                ], className="text-center py-5")
-            ])
-        ])
-    ], fluid=True, className="bg-white"),
 
-    # --- PHẦN 2: GIỚI THIỆU 2 TÍNH NĂNG CHÍNH ---
-    dbc.Container([
-        dbc.Row([
-            dbc.Col(html.H2("Khám phá Hệ thống", className="text-center fw-bold mb-5"), width=12),
-            
-            # TÍNH NĂNG 1: Tra cứu SBD
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div(html.I(className="bi bi-card-checklist h1 text-primary"), className="mb-3"),
-                        html.H3("Tra cứu theo SBD", className="fw-bold"),
-                        html.P(
-                            "Phân tích vị thế dựa trên dữ liệu thực tế của thí sinh năm 2025. "
-                            "Hệ thống tự động bóc tách tổ hợp và tính toán điểm chuẩn xác."
-                        ),
-                        dbc.Button("Thử ngay 🔍", href="/dss_with_sbd", color="primary", className="mt-2 w-100 py-2")
-                    ])
-                ], className="h-100 border-0 shadow p-3 hover-shadow")
-            ], md=6),
+    # =====================================================
+    # HERO SECTION
+    # =====================================================
 
-            # TÍNH NĂNG 2: Nhập điểm tay (Simulated Data)
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div(html.I(className="bi bi-input-cursor-text h1 text-success"), className="mb-3"),
-                        html.H3("Giả lập kịch bản", className="fw-bold"),
-                        html.P(
-                            "Tự nhập các đầu điểm mong muốn để xem dự báo vị thế. "
-                            "Công cụ đắc lực để so sánh các tổ hợp môn khác nhau."
-                        ),
-                        dbc.Button("Trải nghiệm ⚡", href="/dss_without_sbd", color="success", className="mt-2 w-100 py-2")
-                    ])
-                ], className="h-100 border-0 shadow p-3 hover-shadow")
-            ], md=6),
-        ], className="g-4 mb-5")
-    ], className="py-5 bg-light"),
+    dbc.Container(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.Div(
+                                [
+                                    html.Div(
+                                        html.I(
+                                            className="bi bi-bar-chart-line-fill text-primary",
+                                            style={"fontSize": "5rem"}
+                                        ),
+                                        className="mb-4"
+                                    ),
+
+                                    html.H1(
+                                        "Hệ thống Phân tích Phổ điểm THPTQG 2025",
+                                        className="fw-bold display-5 mb-3"
+                                    ),
+
+                                    html.P(
+                                        [
+                                            "Nền tảng hỗ trợ ",
+                                            html.Strong("phân tích vị thế điểm số"),
+                                            ", đánh giá khả năng cạnh tranh và mô phỏng ",
+                                            html.Strong("các kịch bản xét tuyển đại học"),
+                                            " dựa trên dữ liệu thực tế năm 2025."
+                                        ],
+                                        className="lead text-secondary mb-3",
+                                        style={
+                                            "maxWidth": "900px",
+                                            "margin": "0 auto"
+                                        }
+                                    ),
+
+                                    html.P(
+                                        "Được xây dựng nhằm hỗ trợ thí sinh, phụ huynh và cố vấn tuyển sinh "
+                                        "trong việc ra quyết định chính xác, trực quan và hiệu quả hơn.",
+                                        className="text-muted mb-4",
+                                        style={
+                                            "maxWidth": "800px",
+                                            "margin": "0 auto"
+                                        }
+                                    ),
+
+                                    html.Div(
+                                        [
+                                            dbc.Badge(
+                                                "Dash + Plotly",
+                                                color="primary",
+                                                className="me-2 px-3 py-2 rounded-pill"
+                                            ),
+
+                                            dbc.Badge(
+                                                "Polars + PyArrow",
+                                                color="dark",
+                                                className="me-2 px-3 py-2 rounded-pill"
+                                            ),
+
+                                            dbc.Badge(
+                                                "Decision Support System",
+                                                color="secondary",
+                                                className="px-3 py-2 rounded-pill"
+                                            ),
+                                        ],
+                                        className="mb-4"
+                                    ),
+
+                                    html.Div(
+                                        [
+                                            html.Small(
+                                                [
+                                                    "Developed by ",
+                                                    html.Strong("Mus"),
+                                                    " • Information Systems • Graduation Project"
+                                                ],
+                                                className="text-muted"
+                                            )
+                                        ]
+                                    )
+                                ],
+                                className="text-center py-5"
+                            )
+                        ],
+                        width=12
+                    )
+                ]
+            )
+        ],
+        fluid=True,
+        className="bg-white border-bottom"
+    ),
+
+
+    # =====================================================
+    # FEATURES SECTION
+    # =====================================================
+
+    dbc.Container(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.H2(
+                                "Khám phá Hệ thống",
+                                className="fw-bold text-center mb-2"
+                            ),
+
+                            html.P(
+                                "Hai công cụ chính giúp phân tích phổ điểm và xây dựng chiến lược xét tuyển hiệu quả",
+                                className="text-center text-muted mb-5"
+                            ),
+                        ],
+                        width=12
+                    )
+                ]
+            ),
+
+            dbc.Row(
+                [
+
+                    # =========================================
+                    # FEATURE 1
+                    # =========================================
+
+                    dbc.Col(
+                        [
+                            dbc.Card(
+                                dbc.CardBody(
+                                    [
+                                        html.Div(
+                                            html.I(
+                                                className="bi bi-card-checklist text-primary",
+                                                style={"fontSize": "3rem"}
+                                            ),
+                                            className="mb-3"
+                                        ),
+
+                                        html.H3(
+                                            "Tra cứu theo SBD",
+                                            className="fw-bold mb-3"
+                                        ),
+
+                                        html.P(
+                                            "Phân tích dữ liệu thực tế của thí sinh năm 2025 thông qua số báo danh. "
+                                            "Hệ thống tự động bóc tách tổ hợp môn, đánh giá vị thế điểm số "
+                                            "và hỗ trợ ra quyết định xét tuyển.",
+                                            className="text-secondary mb-4"
+                                        ),
+
+                                        dbc.Button(
+                                            "Truy cập hệ thống 🔍",
+                                            href="/dss_with_sbd",
+                                            color="primary",
+                                            className="w-100 py-2 fw-semibold shadow-sm",
+                                            style={
+                                                "borderRadius": "14px",
+                                                "transition": "all 0.2s ease"
+                                            }
+                                        )
+                                    ]
+                                ),
+                                className="h-100 border-0 shadow-sm rounded-4 p-3"
+                            )
+                        ],
+                        md=6,
+                        className="mb-4"
+                    ),
+
+
+                    # =========================================
+                    # FEATURE 2
+                    # =========================================
+
+                    dbc.Col(
+                        [
+                            dbc.Card(
+                                dbc.CardBody(
+                                    [
+                                        html.Div(
+                                            html.I(
+                                                className="bi bi-input-cursor-text text-success",
+                                                style={"fontSize": "3rem"}
+                                            ),
+                                            className="mb-3"
+                                        ),
+
+                                        html.H3(
+                                            "Giả lập kịch bản",
+                                            className="fw-bold mb-3"
+                                        ),
+
+                                        html.P(
+                                            "Cho phép người dùng tự nhập điểm dự kiến để mô phỏng nhiều "
+                                            "phương án xét tuyển khác nhau, từ đó lựa chọn tổ hợp tối ưu "
+                                            "và xây dựng chiến lược an toàn hơn.",
+                                            className="text-secondary mb-4"
+                                        ),
+
+                                        dbc.Button(
+                                            "Bắt đầu mô phỏng ⚡",
+                                            href="/dss_without_sbd",
+                                            color="success",
+                                            className="w-100 py-2 fw-semibold shadow-sm",
+                                            style={
+                                                "borderRadius": "14px",
+                                                "transition": "all 0.2s ease"
+                                            }
+                                        )
+                                    ]
+                                ),
+                                className="h-100 border-0 shadow-sm rounded-4 p-3"
+                            )
+                        ],
+                        md=6,
+                        className="mb-4"
+                    ),
+                ],
+                className="g-4"
+            )
+        ],
+        className="py-5"
+    )
 ])

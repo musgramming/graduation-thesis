@@ -4,6 +4,7 @@ import polars as pl
 from data import BANG_DIEM, TO_HOP
 from utils.build_script import display_graph_and_table
 from utils.naming import naming_with_sbd
+from utils.persistent import make_persistent
 
 
 
@@ -32,10 +33,12 @@ left_layout = html.Div([
             dbc.Row([
                 dbc.Label("Số báo danh", width=4, className="small fw-bold"),
                 dbc.Col([
-                    dbc.Input(
-                        id=naming_with_sbd("sbd"), type="text", 
-                        minlength=8, maxlength=8, placeholder="VD: 01000001",
-                        className="shadow-sm"
+                    make_persistent(
+                        dbc.Input(
+                            id=naming_with_sbd("sbd"), type="text", 
+                            minlength=8, maxlength=8, placeholder="VD: 01000001",
+                            className="shadow-sm"
+                        )
                     ),
                     dbc.FormFeedback(id=naming_with_sbd("sbd-feedback"), type="invalid"),
                 ], width=8),
@@ -45,10 +48,12 @@ left_layout = html.Div([
             dbc.Row([
                 dbc.Label("Năm thi", width=4, className="small fw-bold"),
                 dbc.Col(
-                    dbc.Input(
-                        id=naming_with_sbd("year"), type="number", 
-                        min=2025, max=2025, value=2025,
-                        className="shadow-sm"
+                    make_persistent(
+                        dbc.Input(
+                            id=naming_with_sbd("year"), type="number", 
+                            min=2025, max=2025, value=2025,
+                            className="shadow-sm"
+                        )
                     ), width=8
                 ),
             ], className="mb-4 align-items-center"),
@@ -68,7 +73,9 @@ left_layout = html.Div([
                 dbc.Row([
                     dbc.Label("Tổ hợp", width=4, className="small"),
                     dbc.Col([
-                        dcc.Dropdown(id=naming_with_sbd("comb"), placeholder="Chọn tổ hợp..."),
+                        make_persistent(
+                            dcc.Dropdown(id=naming_with_sbd("comb"), placeholder="Chọn tổ hợp..."),
+                        ),
                         html.Div(id=naming_with_sbd("status-output-2"), className="small mt-1")
                     ], width=8),
                 ], className="mb-3"),
@@ -85,6 +92,8 @@ left_layout = html.Div([
             html.Div(id=naming_with_sbd("status-output"), className="mt-3")
         ]),
     ], className="shadow-sm border-0 mb-4"),
+
+
 
     # CARD 2: XÂY DỰNG KỊCH BẢN
     dbc.Card([
@@ -103,17 +112,19 @@ left_layout = html.Div([
             html.Hr(),
 
             html.Label("Phương pháp quy đổi:", className="fw-bold small mb-2 d-block"),
-            dcc.RadioItems(
-                options=[
-                    {"label": " Điểm thô", "value": "raw-score"},
-                    {"label": " Z-Score", "value": "z-score"},
-                    {"label": " Robust", "value": "robust"}
-                ],
-                value="raw-score",
-                id=naming_with_sbd("mode-selection"),
-                labelStyle={'display': 'inline-block', 'marginRight': '15px', 'fontSize': '14px'},
-                inputStyle={"marginRight": "5px"},
-                className="mb-4"
+            make_persistent(
+                dcc.RadioItems(
+                    options=[
+                        {"label": " Điểm thô", "value": "raw-score"},
+                        {"label": " Z-Score", "value": "z-score"},
+                        {"label": " Robust", "value": "robust"}
+                    ],
+                    value="raw-score",
+                    id=naming_with_sbd("mode-selection"),
+                    labelStyle={'display': 'inline-block', 'marginRight': '15px', 'fontSize': '14px'},
+                    inputStyle={"marginRight": "5px"},
+                    className="mb-4"
+                )
             ),
 
             dbc.Button(
@@ -132,8 +143,11 @@ right_layout = dbc.Card([
     dbc.CardBody([
         dcc.Loading(
             id=naming_with_sbd("loading-analysis"),
-            type="dot",
-            children=html.Div(id=naming_with_sbd("full-div"), style={"minHeight": "500px"}),
+            type="circle",
+            children=html.Div(
+                id=naming_with_sbd("full-div"), 
+                style={"minHeight": "500px"}
+            ),
             color="#3498db"
         )
     ])
@@ -143,9 +157,19 @@ right_layout = dbc.Card([
 
 layout = dbc.Container([
     dbc.Row([
-        dbc.Col(left_layout, width=12, md=4, className="mb-4 p-1"),
-        dbc.Col(right_layout, width=12, md=8, className="p-1")
-    ], className="mt-4 g-4") # g-4 tạo khoảng cách (gutter) đẹp giữa các cột
+        dbc.Col(
+            left_layout, 
+            width=12, 
+            md=4, 
+            className="mb-4 p-1"
+        ),
+        dbc.Col(
+            right_layout, 
+            width=12, 
+            md=8, 
+            className="p-1"
+        )
+    ], className="mt-4 g-4")
 ], fluid=True, className="p-0 px-3 px-md-5 pb-5 bg-light")
 
 
@@ -172,7 +196,8 @@ def validate_sbd(val):
     Returns:
         tuple: (Trạng thái invalid (bool), Thông điệp phản hồi (str)).
     """
-    if not val: return False, ""
+    if not val: 
+        return False, ""
     
     if not val.isdigit():
         return True, "❌ Chỉ được nhập số!"
@@ -182,8 +207,10 @@ def validate_sbd(val):
     
     ma_tinh = int(val[:2])
     stt = int(val[2:])
+    
     if not ((1 <= ma_tinh <= 19) or (21 <= ma_tinh <= 65)):
         return True, f"❌ Mã tỉnh {ma_tinh} không tồn tại!"
+    
     if stt == 0:
         return True, f"❌ Số báo danh không tồn tại"
     
@@ -193,17 +220,11 @@ def validate_sbd(val):
 
 
 
-# Lấy thông tin về tổ hợp
-# Input:
-# - SBD - naming_with_sbd("sbd")
-# - Năm - naming_with_sbd("year")
-# Output:
-# - Danh sách tổ hợp khả dĩ - naming_with_sbd("comb")
 @callback(
     [
         Output(naming_with_sbd("comb"), "options"),
         Output(naming_with_sbd("comb"), "value"),
-        Output(naming_with_sbd("comb"), "style"), # Thay disabled bằng style
+        Output(naming_with_sbd("comb"), "style"),
         Output(naming_with_sbd("status-output-2"), "children"),
     ],
     [
@@ -277,17 +298,14 @@ def get_comb(n, sbd, year):
     
     first_value = options[0]["value"] if options else None
     
-    # Trả về: options, giá trị mặc định, hiện dropdown, và xóa thông báo lỗi
     return options, first_value, STYLE_SHOW, ""
 
 
 
 
 
-# Vô hiệu hóa nút bấm khi nhập chưa xong
 @callback(
-    Output(naming_with_sbd("search-info"), "disabled")
-    ,
+    Output(naming_with_sbd("search-info"), "disabled"),
     [
         Input(naming_with_sbd("sbd"), "value"),
         Input(naming_with_sbd("year"), "value")
@@ -408,18 +426,20 @@ def choosing_combs(comb):
     if not comb:
         return None
     
-    return dcc.Dropdown(
-        options = [
-            {
-                "label": row["Tên tổ hợp"], 
-                "value": row["Tổ hợp"]
-            } 
-            for row in TO_HOP.collect().to_dicts()
-        ],
-        value=[comb],
-        multi=True,
-        clearable=True,
-        id = naming_with_sbd("combs-script"),   
+    return make_persistent(
+        dcc.Dropdown(
+            options = [
+                {
+                    "label": row["Tên tổ hợp"], 
+                    "value": row["Tổ hợp"]
+                } 
+                for row in TO_HOP.collect().to_dicts()
+            ],
+            value=[comb],
+            multi=True,
+            clearable=True,
+            id = naming_with_sbd("combs-script"),   
+        )
     )
 
 
@@ -482,19 +502,28 @@ def choosing_floor_score(score_text):
     score_val = float(parts[0])
     
     if score_val < 15:
-        return [dbc.Alert("Điểm sàn tối thiểu từ 15.00 trở lên", color="warning", className="p-2 small")]
+        return [
+            dbc.Alert(
+                "Điểm sàn tối thiểu từ 15.00 trở lên", 
+                color="warning", 
+                className="p-2 small"
+            )
+        ]
 
     max_val = min(30, score_val)
 
     # Bọc cái Component vào trong List
-    return [dcc.Slider(
-        id=naming_with_sbd("floor-score-slider"),
-        min=15,
-        max=max_val,
-        step=0.1,
-        value=15,
-        marks={i: str(i) for i in range(15, int(max_val) + 1, 3)},
-        tooltip={"always_visible": True, "placement": "bottom"}
+    return [
+        make_persistent(
+            dcc.Slider(
+                id=naming_with_sbd("floor-score-slider"),
+                min=15,
+                max=max_val,
+                step=0.1,
+                value=15,
+                marks={i: str(i) for i in range(15, int(max_val) + 1, 3)},
+                tooltip={"always_visible": True, "placement": "bottom"}
+            )
     )]
 
 
@@ -505,7 +534,7 @@ def choosing_floor_score(score_text):
     Output(naming_with_sbd("analysis"), "disabled"),
     [
         Input(naming_with_sbd("score"), "children"),
-        Input(naming_with_sbd("choosing-combs"), "children"), # Kiểm tra xem Dropdown chọn khối đã hiện chưa
+        Input(naming_with_sbd("choosing-combs"), "children"),
     ]
 )
 def toggle_analysis_button(score_text, combs_dropdown):
@@ -527,7 +556,7 @@ def toggle_analysis_button(score_text, combs_dropdown):
         State(naming_with_sbd("year"), "value"),
         State(naming_with_sbd("floor-score-slider"), "value"),
         State(naming_with_sbd("combs-script"), "value"),
-        State(naming_with_sbd("mode-selection"), "value") # Bây giờ 'mode' sẽ là string trực tiếp
+        State(naming_with_sbd("mode-selection"), "value")
     ],
     prevent_initial_call=True
 )
@@ -552,10 +581,8 @@ def analysis_callback(n, score_text, year, floor_score, combs, mode):
         return None
     
     try:
-        # Tách lấy phần số từ chuỗi "27.50 điểm"
         score_val = float(score_text.split()[0])
         
-        # Gọi hàm xử lý đồ thị
         return display_graph_and_table(
             year=int(year),
             self_score=score_val,
