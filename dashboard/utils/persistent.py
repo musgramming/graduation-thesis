@@ -11,6 +11,6 @@ def make_persistent(component: Component) -> Component:
         Component: Component đã được cấu hình tính năng ghi nhớ.
     """
     component.persistence = True
-    component.persistence_type = 'local'
+    component.persistence_type = 'session'
     component.persisted_props = ['value']
     return component

@@ -27,69 +27,123 @@ register_page(
 left_layout = html.Div([
     # CARD 1: KẾT QUẢ THI
     dbc.Card([
-        dbc.CardHeader("Kết quả thi THPTQG của bạn", className="fw-bold bg-primary text-white"),
+        dbc.CardHeader(
+            "Kết quả thi THPTQG của bạn", 
+            className="fw-bold bg-primary text-white"
+        ),
+
+
         dbc.CardBody([
             # SBD
             dbc.Row([
-                dbc.Label("Số báo danh", width=4, className="small fw-bold"),
+                dbc.Label(
+                    "Số báo danh", 
+                    width=4, 
+                    className="small fw-bold"
+                ),
+                
+
                 dbc.Col([
                     make_persistent(
                         dbc.Input(
-                            id=naming_with_sbd("sbd"), type="text", 
-                            minlength=8, maxlength=8, placeholder="VD: 01000001",
+                            id=naming_with_sbd("sbd"), 
+                            type="text", 
+                            minlength=8, 
+                            maxlength=8, 
+                            placeholder="VD: 01000001",
                             className="shadow-sm"
                         )
                     ),
-                    dbc.FormFeedback(id=naming_with_sbd("sbd-feedback"), type="invalid"),
+                    dbc.FormFeedback(
+                        id=naming_with_sbd("sbd-feedback"), 
+                        type="invalid"
+                    ),
                 ], width=8),
             ], className="mb-3 align-items-center"),
 
+
             # Năm thi
             dbc.Row([
-                dbc.Label("Năm thi", width=4, className="small fw-bold"),
+                dbc.Label(
+                    "Năm thi", 
+                    width=4, 
+                    className="small fw-bold"
+                ),
+
+                
                 dbc.Col(
                     make_persistent(
                         dbc.Input(
-                            id=naming_with_sbd("year"), type="number", 
-                            min=2025, max=2025, value=2025,
+                            id=naming_with_sbd("year"), 
+                            type="number", 
+                            min=2025, 
+                            max=2025, 
+                            value=2025,
                             className="shadow-sm"
                         )
                     ), width=8
                 ),
             ], className="mb-4 align-items-center"),
 
+
             # Nút Tra cứu
             html.Div(
                 dbc.Button(
-                    [html.I(className="bi bi-search me-2"), "Tra cứu"], 
+                    [
+                        html.I(className="bi bi-search me-2"), 
+                        "Tra cứu"
+                    ], 
                     id=naming_with_sbd("search-info"), 
-                    color="primary", className="w-100 shadow-sm fw-bold"
+                    color="primary", 
+                    className="w-100 shadow-sm fw-bold"
                 ),
                 className="mb-4"
             ),
 
+
             # Kết quả sau tra cứu
             html.Div([
                 dbc.Row([
-                    dbc.Label("Tổ hợp", width=4, className="small"),
+                    dbc.Label(
+                        "Tổ hợp", 
+                        width=4, 
+                        className="small"
+                    ),
                     dbc.Col([
                         make_persistent(
-                            dcc.Dropdown(id=naming_with_sbd("comb"), placeholder="Chọn tổ hợp..."),
+                            dcc.Dropdown(
+                                id=naming_with_sbd("comb"), 
+                                placeholder="Chọn tổ hợp..."
+                            ),
                         ),
-                        html.Div(id=naming_with_sbd("status-output-2"), className="small mt-1")
+                        html.Div(
+                            id=naming_with_sbd("status-output-2"), 
+                            className="small mt-1"
+                        )
                     ], width=8),
                 ], className="mb-3"),
 
+
                 dbc.Row([
-                    dbc.Label("Điểm", width=4, className="small"),
+                    dbc.Label(
+                        "Điểm", 
+                        width=4, 
+                        className="small"
+                    ),
                     dbc.Col(
-                        html.Div(id=naming_with_sbd("score"), className="h4 fw-bold text-primary mb-0"),
+                        html.Div(
+                            id=naming_with_sbd("score"), 
+                            className="h4 fw-bold text-primary mb-0"
+                        ),
                         width=8
                     )
                 ]),
             ], className="p-3 bg-light rounded-3 border border-dashed"),
 
-            html.Div(id=naming_with_sbd("status-output"), className="mt-3")
+            html.Div(
+                id=naming_with_sbd("status-output"), 
+                className="mt-3"
+            )
         ]),
     ], className="shadow-sm border-0 mb-4"),
 
@@ -97,21 +151,48 @@ left_layout = html.Div([
 
     # CARD 2: XÂY DỰNG KỊCH BẢN
     dbc.Card([
-        dbc.CardHeader("Xây dựng kịch bản", className="fw-bold bg-dark text-white"),
+        dbc.CardHeader(
+            "Xây dựng kịch bản",
+            className="fw-bold bg-dark text-white"
+        ),
+        
         dbc.CardBody([
             dbc.Row([
-                dbc.Label("Tổ hợp so sánh", width=4, className="small fw-bold"),
-                dbc.Col(html.Div(id=naming_with_sbd("choosing-combs"), className="text-primary fw-bold"), width=8)
+                dbc.Label(
+                    "Tổ hợp so sánh", 
+                    width=4, 
+                    className="small fw-bold"
+                ),
+                dbc.Col(
+                    html.Div(
+                        id=naming_with_sbd("choosing-combs"), 
+                        className="text-primary fw-bold"
+                    ), width=8)
             ], className="mb-3"),
 
             dbc.Row([
-                dbc.Label("Điểm sàn", width=4, className="small fw-bold"),
-                dbc.Col(html.Div(id=naming_with_sbd("choosing-score"), className="text-primary fw-bold"), width=8)
+                dbc.Label(
+                    "Điểm sàn", 
+                    width=4, 
+                    className="small fw-bold"
+                ),
+                dbc.Col(
+                    html.Div(
+                        id=naming_with_sbd("choosing-score"), 
+                        className="text-primary fw-bold"
+                    ), width=8
+                )
             ], className="mb-3"),
+
 
             html.Hr(),
 
-            html.Label("Phương pháp quy đổi:", className="fw-bold small mb-2 d-block"),
+
+            html.Label(
+                "Phương pháp quy đổi:", 
+                className="fw-bold small mb-2 d-block"
+            ),
+            
             make_persistent(
                 dcc.RadioItems(
                     options=[
@@ -121,16 +202,24 @@ left_layout = html.Div([
                     ],
                     value="raw-score",
                     id=naming_with_sbd("mode-selection"),
-                    labelStyle={'display': 'inline-block', 'marginRight': '15px', 'fontSize': '14px'},
+                    labelStyle={
+                        'display': 'inline-block', 
+                        'marginRight': '15px', 
+                        'fontSize': '14px'
+                    },
                     inputStyle={"marginRight": "5px"},
                     className="mb-4"
                 )
             ),
 
             dbc.Button(
-                [html.I(className="bi bi-lightning-fill me-2"), "Xây kịch bản"], 
+                [
+                    html.I(className="bi bi-lightning-fill me-2"), 
+                    "Xây kịch bản"
+                ], 
                 id=naming_with_sbd("analysis"), 
-                color="success", className="w-100 shadow fw-bold py-2"
+                color="success", 
+                className="w-100 shadow fw-bold py-2"
             ),
         ])
     ], className="shadow-sm border-0")
@@ -512,7 +601,6 @@ def choosing_floor_score(score_text):
 
     max_val = min(30, score_val)
 
-    # Bọc cái Component vào trong List
     return [
         make_persistent(
             dcc.Slider(
@@ -522,9 +610,13 @@ def choosing_floor_score(score_text):
                 step=0.1,
                 value=15,
                 marks={i: str(i) for i in range(15, int(max_val) + 1, 3)},
-                tooltip={"always_visible": True, "placement": "bottom"}
+                tooltip={
+                    "always_visible": True, 
+                    "placement": "bottom"
+                }
             )
-    )]
+        )
+    ]
 
 
 

@@ -32,7 +32,7 @@ def input_num(id : str, **kwargs):
         step = 0.01,
         className = "text-center shadow-sm border-primary-subtle",
         persistence=True,
-        persistence_type='local',
+        persistence_type='session',
         persisted_props=['value'],
         **kwargs
     )
@@ -50,6 +50,8 @@ left_layout = html.Div([
             ]),
             className="fw-bold bg-primary text-white"
         ),
+
+
         dbc.CardBody([
             # Năm xét tuyển (Làm gọn)
             dbc.Row([
@@ -73,7 +75,9 @@ left_layout = html.Div([
                 ),
             ], className="mb-3 g-2 align-items-center"),
 
+
             html.Hr(className="my-3"),
+
 
             # Khu vực nhập điểm
             html.Div([
@@ -191,7 +195,8 @@ left_layout = html.Div([
 
             make_persistent(
                 dcc.Store(
-                    id=naming_without_sbd("stored-results")
+                    id=naming_without_sbd("stored-results"),
+                    storage_type="session"
                 )
             ),
 
@@ -216,7 +221,9 @@ left_layout = html.Div([
                     make_persistent(
                         dcc.Slider(
                             id=naming_without_sbd("floor-score"),
-                            min=15, max=30, step=0.05,
+                            min=15, 
+                            max=30, 
+                            step=0.05,
                             marks={i: str(i) for i in range(15, 31, 5)},
                             className="mt-2"
                         )
