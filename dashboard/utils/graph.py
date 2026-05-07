@@ -14,7 +14,7 @@ def build_strict_graph(fig: go.Figure = None) -> go.Figure:
             gridcolor='#f0f0f0',
             zeroline=False, 
             visible=not is_empty,
-            tickfont=dict(size=10) # Chữ nhỏ lại một chút cho mobile
+            tickfont=dict(size=10)
         ),
         yaxis=dict(
             fixedrange=True, 
@@ -24,18 +24,20 @@ def build_strict_graph(fig: go.Figure = None) -> go.Figure:
             visible=not is_empty,
             tickfont=dict(size=10)
         ),
-
         hovermode='x unified',
-        
         dragmode='zoom', 
-        
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        
-        margin=dict(l=5, r=5, t=40, b=5),
-        
-        font=dict(family="Arial, sans-serif", size=12),
-        
+        margin=dict(
+            l=5, 
+            r=5, 
+            t=40, 
+            b=5
+        ),
+        font=dict(
+            family="Arial, sans-serif", 
+            size=12
+        ),
         autosize=True
     )
 

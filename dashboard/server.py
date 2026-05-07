@@ -59,7 +59,6 @@ app = Dash(
     server=server,
     use_pages = True, 
     external_stylesheets = [
-        # dbc.themes.BOOTSTRAP,
         "/assets/bootstrap/css/bootstrap.min.css"
     ], 
     external_scripts=[

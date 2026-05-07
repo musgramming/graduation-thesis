@@ -1,4 +1,4 @@
-from dash import callback, html, register_page, dcc, Input, Output, State, MATCH
+from dash import callback, html, register_page, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
 import polars as pl
 from data import BANG_DIEM, TO_HOP
@@ -228,7 +228,10 @@ left_layout = html.Div([
 
 
 right_layout = dbc.Card([
-    dbc.CardHeader("Phân tích dữ liệu & Phổ điểm 2025", className="fw-bold bg-white text-primary"),
+    dbc.CardHeader(
+        "Phân tích dữ liệu & Phổ điểm 2025", 
+        className="fw-bold bg-white text-primary"
+    ),
     dbc.CardBody([
         dcc.Loading(
             id=naming_with_sbd("loading-analysis"),
@@ -356,7 +359,10 @@ def get_comb(n, sbd, year):
     # TRƯỜNG HỢP 1: Không tìm thấy SBD
     if df_all.is_empty():
         return [], None, STYLE_HIDDEN, [
-            dbc.Alert(f"Không tìm thấy SBD {sbd_str}!", color="danger")
+            dbc.Alert(
+                f"Không tìm thấy SBD {sbd_str}!", 
+                color="danger"
+            )
         ]
 
     # TRƯỜNG HỢP 2: Hợp lệ = False
@@ -381,7 +387,10 @@ def get_comb(n, sbd, year):
     )
 
     options = [
-        {"label": row["Tên tổ hợp"], "value": row["Tổ hợp"]} 
+        {
+            "label": row["Tên tổ hợp"], 
+            "value": row["Tổ hợp"]
+        } 
         for row in final_df.to_dicts()
     ]
     
@@ -401,7 +410,8 @@ def get_comb(n, sbd, year):
     ]
 )
 def disable_button(sbd, year):
-    """Kiểm soát trạng thái kích hoạt của nút truy vấn dữ liệu.
+    """
+    Kiểm soát trạng thái kích hoạt của nút truy vấn dữ liệu.
 
     Đảm bảo người dùng chỉ có thể nhấn nút khi đã nhập đủ thông tin cơ bản 
     và thông tin đó vượt qua các kiểm tra định dạng sơ bộ.
@@ -427,8 +437,11 @@ def disable_button(sbd, year):
     # Kiểm tra SBD
     ma_tinh = int(sbd[:2])
     stt = int(sbd[2:])
-    if not (1 <= ma_tinh <= 19 or 21 <= ma_tinh <= 65) or (stt == 0):
+    if year == 2025 and not (1 <= ma_tinh <= 19 or 21 <= ma_tinh <= 65) or (stt == 0):
         return True 
+    
+    if year > 2025 and not (1 <= ma_tinh <= 34):
+        return True
     
     return False
 
@@ -653,7 +666,8 @@ def toggle_analysis_button(score_text, combs_dropdown):
     prevent_initial_call=True
 )
 def analysis_callback(n, score_text, year, floor_score, combs, mode):
-    """Điều phối và hiển thị kết quả phân tích đồ thị và bảng phổ điểm.
+    """
+    Điều phối và hiển thị kết quả phân tích đồ thị và bảng phổ điểm.
 
     Là callback trung tâm thực hiện chuyển đổi dữ liệu từ giao diện người dùng 
     vào hàm xử lý logic `display_graph_and_table`.
@@ -682,9 +696,13 @@ def analysis_callback(n, score_text, year, floor_score, combs, mode):
             combs=combs,
             mode=mode
         )
+    
     except Exception as e:
         print(f"Lỗi Callback: {e}")
-        return dbc.Alert(f"Đã có lỗi xảy ra: {str(e)}", color="danger")
+        return dbc.Alert(
+            f"Đã có lỗi xảy ra: {str(e)}", 
+            color="danger"
+        )
 
 
 

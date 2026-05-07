@@ -1,4 +1,4 @@
-from dash import callback, html, register_page, dcc, Input, Output, State, MATCH, dash_table, no_update
+from dash import callback, html, register_page, dcc, Input, Output, State, no_update
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
 import polars as pl
@@ -83,7 +83,10 @@ left_layout = html.Div([
             html.Div([
                 dbc.Row([
                     dbc.Col(
-                        html.Label("Toán", className="fw-bold mb-0"), 
+                        html.Label(
+                            "Toán", 
+                            className="fw-bold mb-0"
+                        ), 
                         width=6
                     ),
                     dbc.Col(
@@ -94,7 +97,10 @@ left_layout = html.Div([
                 
                 dbc.Row([
                     dbc.Col(
-                        html.Label("Văn", className="fw-bold mb-0"), 
+                        html.Label(
+                            "Văn", 
+                            className="fw-bold mb-0"
+                        ), 
                         width=6
                     ),
                     dbc.Col(
