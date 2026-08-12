@@ -1,0 +1,6 @@
+numpy
+polars
+openpyxl
+json5
+pandas
+pyarrow

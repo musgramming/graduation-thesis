@@ -1,0 +1,10 @@
+{
+    "2025" : {
+        "File chính" : "data/bang_diem/20250715-ketquathi-ct2018a.xlsx", 
+        "File phụ" : "data/bang_diem/20250715-ketquathi-ct2006.xlsx"
+    }, 
+    "2026" : {
+        "File chính": "data/bang_diem/diem_thpt_2026.csv", 
+        "File phụ" : null
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "2025" : {
+        "drop" : ["STT"], 
+        "rename" : {
+            "Tin học" : "Tin"
+        }
+    }, 
+    "2026" : {
+        "drop" : ["dm11"], 
+        "rename" : {
+            "sbd" : "SOBAODANH", 
+            "dm1" : "Toán", 
+            "dm2" : "Văn", 
+            "dm3" : "Ngoại ngữ",
+            "dm4" : "Sử", 
+            "dm5" : "Địa", 
+            "dm6" : "Giáo dục kinh tế và pháp luật", 
+            "dm7" : "Lí", 
+            "dm8" : "Hóa", 
+            "dm9" : "Sinh", 
+            "dm10" : "Tin", 
+            "dm12" : "Công nghệ công nghiệp", 
+            "dm13" : "Công nghệ nông nghiệp",
+            "ngoai_ngu": "Mã môn ngoại ngữ"
+        }
+    }
+}
