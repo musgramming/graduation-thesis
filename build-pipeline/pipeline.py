@@ -116,15 +116,15 @@ def tien_xu_ly_bang_diem_chinh(file_chinh: str, year: int) -> pl.LazyFrame:
     ## B3b. Xử lý điểm Toán, Văn
     ## Theo quy chế, thí sinh nào không làm bài 1 trong 2 môn này thì bị điểm liệt
     DF_CHINH = DF_CHINH.with_columns([
-        pl.col("Toán").cast(pl.Float32).fill_null(0),
-        pl.col("Văn").cast(pl.Float32).fill_null(0),
+        pl.col("Toán").cast(pl.Float32).round(2).fill_null(0),
+        pl.col("Văn").cast(pl.Float32).round(2).fill_null(0),
     ])
 
 
     ## B3c. Xử lý điểm mấy môn kia
     DF_CHINH = DF_CHINH.with_columns(
         [
-            pl.col(i).cast(pl.Float32)
+            pl.col(i).cast(pl.Float32).round(2)
             for i in MON_TU_CHON
         ]
     )
@@ -189,6 +189,14 @@ def tien_xu_ly_bang_diem_chinh(file_chinh: str, year: int) -> pl.LazyFrame:
                 on = "SOBAODANH", 
                 how = "left"
             )
+    )
+
+    print(
+        f"""
+        Đã ghi thành công:
+        - Số dòng: {DF_CHINH.select(pl.len()).collect().item()}
+        - Số cột: {len(DF_CHINH.collect_schema())}
+        """
     )
 
     return DF_CHINH
@@ -425,7 +433,7 @@ def full_processing(year: int):
     )
 
     DF_CHINH.collect().write_parquet(
-        f"./output/bang-diem/bang-diem-{year}.parquet",
+        f"./output/bang_diem/bang_diem-{year}.parquet",
         compression="zstd",
         compression_level=19,
         use_pyarrow=True,
@@ -531,7 +539,7 @@ def full_processing(year: int):
         ])
         .collect()
         .write_parquet(
-            f"./output/bang-diem-to-hop/bang-diem-to-hop-{year}.parquet",
+            f"./output/bang_diem_to_hop/bang_diem_to_hop-{year}.parquet",
             compression="zstd",
             compression_level=19,
             use_pyarrow=True,

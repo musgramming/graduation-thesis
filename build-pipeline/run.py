@@ -25,15 +25,16 @@ def parse_arguments() -> argparse.Namespace:
     """Đọc tham số command line."""
 
     parser = argparse.ArgumentParser(
-        description="Chạy pipeline xử lý dữ liệu THPTQG."
+        description="Chạy pipeline xử lý dữ liệu THPTQG cho nhiều năm."
     )
 
     parser.add_argument(
         "-y",
-        "--year",
+        "--years",
         type=int,
+        nargs="+",
         required=True,
-        help="Năm dữ liệu cần xử lý.",
+        help="Danh sách các năm dữ liệu cần xử lý (ví dụ: -y 2024 2025 hoặc -y 2025).",
     )
 
     return parser.parse_args()
@@ -43,17 +44,19 @@ def parse_arguments() -> argparse.Namespace:
 # Validation
 # ============================================================
 
-def validate_year(year: int) -> bool:
-    """Kiểm tra năm dữ liệu."""
+def validate_years(years: list[int]) -> bool:
+    """Kiểm tra danh sách năm dữ liệu."""
 
-    if year < 2025:
-        print(
-            f"ERROR: Năm dữ liệu phải từ 2025 trở đi: {year}",
-            file=sys.stderr,
-        )
-        return False
+    valid = True
+    for year in years:
+        if year < 2025:
+            print(
+                f"ERROR: Năm dữ liệu phải từ 2025 trở đi: {year}",
+                file=sys.stderr,
+            )
+            valid = False
 
-    return True
+    return valid
 
 
 # ============================================================
@@ -64,8 +67,8 @@ def prepare_directories() -> None:
     """Tạo các thư mục cần thiết."""
 
     directories = [
-        OUTPUT_DIR / "bang-diem",
-        OUTPUT_DIR / "bang-diem-to-hop",
+        OUTPUT_DIR / "bang_diem",
+        OUTPUT_DIR / "bang_diem_to_hop",
     ]
 
     for directory in directories:
@@ -101,8 +104,12 @@ def create_virtual_environment() -> None:
 
 def get_python_executable() -> Path:
     """Lấy Python executable bên trong virtual environment."""
-
-    return VENV_DIR / "Scripts" / "python.exe"
+    
+    # Lưu ý: Nếu chạy trên Linux/macOS, đường dẫn là VENV_DIR / "bin" / "python"
+    # Ở đây giữ nguyên "Scripts" cho Windows theo code gốc của bạn.
+    if sys.platform == "win32":
+        return VENV_DIR / "Scripts" / "python.exe"
+    return VENV_DIR / "bin" / "python"
 
 
 # ============================================================
@@ -149,11 +156,9 @@ def run_pipeline(
     python_executable: Path,
     year: int,
 ) -> int:
-    """Chạy pipeline.py và trả về exit code."""
+    """Chạy pipeline.py cho một năm cụ thể và trả về exit code."""
 
-    print(
-        f"\nĐang chạy pipeline cho năm {year}...\n"
-    )
+    print(f"\nĐang chạy pipeline cho năm {year}...\n")
 
     result = subprocess.run(
         [
@@ -179,13 +184,13 @@ def main() -> int:
     # --------------------------------------------------------
 
     args = parse_arguments()
-    year = args.year
+    years = args.years
 
     # --------------------------------------------------------
-    # B2. Validate year
+    # B2. Validate years
     # --------------------------------------------------------
 
-    if not validate_year(year):
+    if not validate_years(years):
         return 1
 
     # --------------------------------------------------------
@@ -197,11 +202,10 @@ def main() -> int:
     print("Đã chuẩn bị thư mục output.")
 
     # --------------------------------------------------------
-    # B4 → B6. Environment + pipeline
+    # B4 → B6. Environment + pipeline (lặp qua các năm)
     # --------------------------------------------------------
 
     try:
-
         create_virtual_environment()
 
         python_executable = get_python_executable()
@@ -210,10 +214,17 @@ def main() -> int:
             python_executable
         )
 
-        return run_pipeline(
-            python_executable,
-            year,
-        )
+        # Chạy lần lượt từng năm trong danh sách
+        for year in years:
+            exit_code = run_pipeline(python_executable, year)
+            if exit_code != 0:
+                print(
+                    f"\nERROR: Pipeline thất bại ở năm {year} với exit code {exit_code}.",
+                    file=sys.stderr,
+                )
+                return exit_code
+
+        return 0
 
     except subprocess.CalledProcessError as error:
 
