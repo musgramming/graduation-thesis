@@ -1,0 +1,39 @@
+/* =========================================================
+   Ép buộc hiệu ứng Sidebar (Offcanvas) hoạt động hoàn hảo
+   ========================================================= */
+
+/* 1. Trạng thái khi đóng: ẩn hẳn sang bên trái (-100%) */
+div.offcanvas.offcanvas-start {
+    transition: transform 0.3s ease-in-out !important;
+    transform: translateX(-100%) !important;
+}
+
+/* 2. Trạng thái khi mở: trượt về vị trí hiển thị (0%) */
+div.offcanvas.offcanvas-start.show {
+    transform: translateX(0%) !important;
+}
+
+/* 3. Ép hiển thị lớp nền mờ (backdrop) màu đen mờ phía sau */
+div.offcanvas-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: #000000 !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease-in-out !important;
+    z-index: 1040 !important;
+    pointer-events: none !important;
+}
+
+/* 4. Khi lớp nền mở (active), tăng độ mờ lên 50% */
+div.offcanvas-backdrop.show {
+    opacity: 0.5 !important;
+    pointer-events: auto !important;
+}
+
+/* 5. Đảm bảo sidebar luôn nổi lên trên lớp nền mờ */
+div.offcanvas {
+    z-index: 1050 !important;
+}

@@ -1,15 +1,23 @@
 from pathlib import Path
 import polars as pl
+import json5
 
+
+# Thư mục gốc 'data/'
 DATA_DIR = Path(__file__).parent 
 
+# Thư mục chứa các bảng tra cứu/quy đổi
+LOOKUP_DIR = DATA_DIR / "lookup_tables"
+
+# Thư mục chứa bảng điểm tổ hợp
 BASE_DIR = DATA_DIR / "combs_scores"
-TO_HOP_PATH = DATA_DIR / "bang_to_hop_mon.csv"
+
+# Sửa lại đường dẫn trỏ đúng vào lookup_tables/
+TO_HOP_PATH = LOOKUP_DIR / "bang_to_hop_mon.csv"
 
 
 if not TO_HOP_PATH.exists():
     print(f"⚠️ Cảnh báo: Không tìm thấy file {TO_HOP_PATH}")
-
 
 TO_HOP = pl.scan_csv(TO_HOP_PATH).with_columns(
         pl.concat_str(
@@ -27,7 +35,7 @@ TO_HOP = pl.scan_csv(TO_HOP_PATH).with_columns(
     )
 
 
-BANG_DIEM = {
+BANG_DIEM_TO_HOP = {
     int(f.stem.split('_')[-1]): pl.scan_parquet(f) 
     for f in BASE_DIR.glob("bang_diem_to_hop_*.parquet")
 }
@@ -55,4 +63,17 @@ BANG_CHON_MON = [
         "label": mon, 
         "value": mon
     } for mon in danh_sach_don_thuan if mon not in ["Toán", "Văn"]
+]
+
+
+with open(DATA_DIR / "lookup_tables" / "bang_quy_doi_tinh_thanh.jsonc", "r", encoding = "utf-8") as f:
+    BANG_QUY_DOI_TINH_THANH = json5.load(f)
+
+
+COMB_OPTIONS = [
+    {
+        "label": row["Tên tổ hợp"],
+        "value": row["Tổ hợp"],
+    }
+    for row in TO_HOP.collect().to_dicts()
 ]

@@ -6,7 +6,7 @@ import plotly.express as px
 import polars as pl
 import dash_bootstrap_components as dbc
 
-from data import BANG_DIEM
+from data import BANG_DIEM_TO_HOP
 from .graph import build_strict_graph
 
 
@@ -27,7 +27,7 @@ def filter_raw_score(year: int, floor_score : float, combs : list[str]) -> pl.La
     Returns:
         pl.LazyFrame: Một bản kế hoạch truy vấn Polars đã được lọc theo điều kiện.
     """
-    return BANG_DIEM[year].filter(
+    return BANG_DIEM_TO_HOP[year].filter(
         (pl.col("Tổ hợp").is_in(combs)) &
         (pl.col("Tổng điểm") >= floor_score) &
         (pl.col("Hợp lệ") == True)
@@ -59,7 +59,7 @@ def filter_z_score(year: int, floor_score : float, combs : list[str]) -> pl.Lazy
     Returns:
         pl.LazyFrame: Dữ liệu đã chuẩn hóa theo phân phối xác suất.
     """
-    df = BANG_DIEM[year].filter(
+    df = BANG_DIEM_TO_HOP[year].filter(
         (pl.col("Tổ hợp").is_in(combs)) & 
         (pl.col("Hợp lệ") == True)
     )
@@ -73,7 +73,10 @@ def filter_z_score(year: int, floor_score : float, combs : list[str]) -> pl.Lazy
     # Bước 2: Tính Z-value
     df_z = df.join(stats, on="Tổ hợp").with_columns(
         pl.when(pl.col("std") > 0)
-        .then((pl.col("Tổng điểm") - pl.col("mean")) / pl.col("std"))
+        .then(
+            (pl.col("Tổng điểm") - pl.col("mean")) / 
+            pl.col("std")
+        )
         .otherwise(0.0)
         .alias("z_val")
     )
@@ -89,7 +92,10 @@ def filter_z_score(year: int, floor_score : float, combs : list[str]) -> pl.Lazy
         df_z.join(min_max_z, on="Tổ hợp")
         .with_columns(
             pl.when(pl.col("z_max") > pl.col("z_min"))
-            .then((pl.col("z_val") - pl.col("z_min")) / (pl.col("z_max") - pl.col("z_min")) * 30)
+            .then(
+                (pl.col("z_val") - pl.col("z_min")) / 
+                (pl.col("z_max") - pl.col("z_min")) * 30
+            )
             .otherwise(15.0)
             .alias("Điểm quy đổi")
         )
@@ -118,7 +124,7 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
     Returns:
         pl.LazyFrame: Dữ liệu đã được loại bỏ nhiễu từ các điểm số cực đoan.
     """
-    df = BANG_DIEM[year].filter(
+    df = BANG_DIEM_TO_HOP[year].filter(
         (pl.col("Tổ hợp").is_in(combs)) & 
         (pl.col("Hợp lệ") == True)
     )
@@ -150,7 +156,8 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
         .with_columns(
             pl.when(pl.col("r_max") > pl.col("r_min"))
             .then(
-                (pl.col("r_val") - pl.col("r_min")) / (pl.col("r_max") - pl.col("r_min")) * 30
+                (pl.col("r_val") - pl.col("r_min")) / 
+                (pl.col("r_max") - pl.col("r_min")) * 30
             ).otherwise(15.0)
             .alias("Điểm quy đổi")
         )
@@ -179,7 +186,7 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
     Note:
         Sử dụng phương pháp .clip(0, 30) để đảm bảo tính an toàn dữ liệu đầu ra.
     """
-    lf = BANG_DIEM[year].filter(pl.col("Tổ hợp").is_in(combs))
+    lf = BANG_DIEM_TO_HOP[year].filter(pl.col("Tổ hợp").is_in(combs))
     
     # Hằng số quy đổi để giữ thang 0-30 nhưng không làm mất đặc tính phân phối
     # Giả sử: Mean/Median nằm ở 15 điểm, mỗi 1 Std/IQR dãn ra 5 điểm
@@ -194,11 +201,16 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
             pl.col("Tổng điểm").mean().alias("mean"),
             pl.col("Tổng điểm").std().alias("std")
         ])
-        return lf.join(stats, on="Tổ hợp").with_columns(
-            (ANCHOR + ((pl.col("Tổng điểm") - pl.col("mean")) / pl.col("std")) * SCALE_FACTOR)
-            .clip(0, 30) # Đảm bảo không vượt quá thang điểm
-            .round(3)
-            .alias("Điểm quy đổi")
+        return (
+            lf.join(stats, on="Tổ hợp").with_columns(
+                (ANCHOR + (
+                    (pl.col("Tổng điểm") - pl.col("mean")) / 
+                    pl.col("std")
+                ) * SCALE_FACTOR)
+                .clip(0, 30) # Đảm bảo không vượt quá thang điểm
+                .round(3)
+                .alias("Điểm quy đổi")
+            )
         )
 
     elif mode == "robust":
@@ -207,15 +219,21 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
             pl.col("Tổng điểm").quantile(0.25).alias("q1"),
             pl.col("Tổng điểm").quantile(0.75).alias("q3")
         ])
-        return lf.join(stats, on="Tổ hợp").with_columns(
-            pl.when(pl.col("q3") > pl.col("q1"))
-            .then(
-                ANCHOR + ((pl.col("Tổng điểm") - pl.col("median")) / (pl.col("q3") - pl.col("q1"))) * SCALE_FACTOR
+        return (
+            lf.join(stats, on="Tổ hợp")
+            .with_columns(
+                pl.when(pl.col("q3") > pl.col("q1"))
+                .then(
+                    ANCHOR + (
+                        (pl.col("Tổng điểm") - pl.col("median")) / 
+                        (pl.col("q3") - pl.col("q1"))
+                    ) * SCALE_FACTOR
+                )
+                .otherwise(ANCHOR)
+                .clip(0, 30)
+                .round(3)
+                .alias("Điểm quy đổi")
             )
-            .otherwise(ANCHOR)
-            .clip(0, 30)
-            .round(3)
-            .alias("Điểm quy đổi")
         )
 
     return lf
@@ -224,351 +242,786 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
 
 
 
-def display_graph_and_table(year: int, self_score : float,  floor_score : float, combs : list[str], mode : Literal["raw-score", "min-max", "z-score", "robust"]) -> html.Div:
+def display_graph_and_table(
+    year: int, 
+    self_score : float, 
+    floor_score : float, 
+    combs : list[str], 
+    mode : Literal["raw-score", "z-score", "robust"]
+) -> html.Div:
     """
-    Xây dựng báo cáo phân tích vị thế và dự báo rủi ro tuyển sinh dựa trên kịch bản điểm số.
+    Xây dựng dashboard phân tích vị thế thí sinh.
 
-    Hệ thống sử dụng các phương pháp quy đổi thống kê để chuẩn hóa sự khác biệt giữa các tổ hợp môn, 
-    giúp thí sinh định vị chính xác năng lực trong "biển" dữ liệu.
+    Dashboard gồm 4 tầng:
 
-    Args:
-        year (int): Năm dữ liệu khảo thí.
-        self_score (float): Điểm số thực tế hoặc dự kiến của người dùng.
-        floor_score (float): Ngưỡng điểm xét tuyển dự kiến (Điểm sàn).
-        combs (list[str]): Các tổ hợp môn cùng xét tuyển vào ngành/trường mục tiêu.
-        mode (str): Phương pháp chuẩn hóa dữ liệu:
-            - "raw-score": Phân tích dựa trên điểm thực tế (Dành cho tra cứu nhanh).
-            - "z-score": Định vị năng lực qua độ lệch chuẩn (Vị thế học thuật cho lớp 12).
-            - "robust": Khử nhiễu "mưa điểm 10" / "mưa điểm thấp" và sai số outliers bằng trung vị (Median).
+    1. Context
+       - Kỳ thi
+       - Tổ hợp
+       - Điểm cá nhân
+       - Điểm sàn
+       - Phương pháp chuẩn hóa
 
-    Returns:
-        html.Div: Dashboard báo cáo đa tầng, bao gồm các cụm thông tin:
-            1. Cụm Vị Thế (PR & Rank): Thống kê số người vượt ngưỡng và xếp hạng phần trăm (Percentile Rank).
-            2. Cụm Toàn Cảnh (Distribution): So sánh phổ điểm cá nhân với phổ điểm tổng quát của các tổ hợp được chọn.
-            3. Cụm Cạnh Tranh (Competition Zoom): Biểu đồ mật độ thí sinh tại vùng điểm [Self ± 1] để đánh giá rủi ro "nghẽn điểm".
-            4. Cụm An Toàn (Safety Zoom): Biểu đồ vùng điểm sàn [Floor ± 1] để dự báo xác suất trúng tuyển (Đáp ứng nhu cầu lớp 10).
-            5. Cụm Tham Chiếu (Reference Data): Bảng đại lượng thống kê (Mean, Median, Std) và danh sách Top 20 "tinh hoa".
+    2. Position
+       - Điểm cá nhân
+       - Vị thế tổng quát
+       - Vị thế trong nhóm đạt điểm sàn
+
+    3. Distribution
+       - Phổ điểm toàn cảnh
+       - Vùng cạnh tranh quanh điểm cá nhân
+       - Vùng điểm sàn
+
+    4. Reference
+       - Top 20 thí sinh
     """
 
-    # 1. Kiểm tra đầu vào & Xử lý dữ liệu (Lazy)
+    # ================================================================
+    # 1. PREPARATION
+    # ================================================================
+
     if not combs:
-        return html.Div("Vui lòng chọn ít nhất một tổ hợp môn.")
-    
-    lf_transformed = transform_scores(year, combs, mode)
-    
-    # Lấy điểm cao nhất mỗi thí sinh
-    lf_final = lf_transformed.group_by("SOBAODANH").agg([
-        pl.col("Điểm quy đổi").max().alias("Điểm quy đổi"),
-        pl.col("Tổ hợp").get(pl.col("Điểm quy đổi").arg_max()).alias("Tổ hợp_chọn")
-    ])
+        return dbc.Alert(
+            "Vui lòng chọn ít nhất một tổ hợp môn.",
+            color="warning",
+            className="mb-0",
+        )
 
-    # 2. Thực thi (Collect) một lần duy nhất
+    lf_transformed = transform_scores(
+        year,
+        combs,
+        mode,
+    )
+
+    # Lấy điểm quy đổi cao nhất của mỗi thí sinh
+    lf_final = (
+        lf_transformed
+        .group_by("SOBAODANH")
+        .agg([
+            pl.col("Điểm quy đổi").max().alias("Điểm quy đổi"),
+            pl.col("Tổ hợp")
+            .get(pl.col("Điểm quy đổi").arg_max())
+            .alias("Tổ hợp_chọn"),
+        ])
+    )
+
     df_result = lf_final.collect()
 
     if df_result.is_empty():
         return dbc.Alert(
-            "Không tìm thấy dữ liệu phù hợp với bộ lọc hiện tại.", 
-            color="warning", 
-            className="mt-4"
+            "Không tìm thấy dữ liệu phù hợp với bộ lọc hiện tại.",
+            color="warning",
+            className="mb-0",
         )
 
-    # 3. Tính toán vị thế kép
-    
-    # A. Vị thế tổng quát (So với toàn bộ thí sinh thi tổ hợp đó)
+
+
+    # ================================================================
+    # 2. POSITION METRICS
+    # ================================================================
+
     total_count = df_result.height
-    overall_rank = df_result.filter(pl.col("Điểm quy đổi") > self_score).height + 1
-    overall_pr = (1 - (overall_rank / total_count)) * 100
 
-    # B. Vị thế cạnh tranh (Chỉ so với những người đủ điểm sàn)
-    df_on_floor = df_result.filter(pl.col("Điểm quy đổi") >= floor_score)
+    # ------------------------------------------------
+    # Vị thế tổng quát
+    # ------------------------------------------------
+
+    overall_rank = (
+        df_result
+        .filter(pl.col("Điểm quy đổi") > self_score)
+        .height
+        + 1
+    )
+
+    overall_pr = (
+        (1 - overall_rank / total_count) * 100
+        if total_count > 0
+        else 0
+    )
+
+    # ------------------------------------------------
+    # Vị thế trong nhóm đạt điểm sàn
+    # ------------------------------------------------
+
+    df_on_floor = df_result.filter(
+        pl.col("Điểm quy đổi") >= floor_score
+    )
+
     total_on_floor = df_on_floor.height
-    
+
     if total_on_floor > 0 and self_score >= floor_score:
-        floor_rank = df_on_floor.filter(pl.col("Điểm quy đổi") > self_score).height + 1
-        floor_pr = (1 - (floor_rank / total_on_floor)) * 100
+
+        floor_rank = (
+            df_on_floor
+            .filter(pl.col("Điểm quy đổi") > self_score)
+            .height
+            + 1
+        )
+
+        floor_pr = (
+            (1 - floor_rank / total_on_floor) * 100
+        )
+
     else:
-        floor_rank = "N/A"
-        floor_pr = 0
+        floor_rank = None
+        floor_pr = None
 
-    # 4. Lọc dữ liệu biểu đồ Zoom (Eager)
+
+
+    # ================================================================
+    # 3. LOCAL DISTRIBUTIONS
+    # ================================================================
+
     df_comp = df_result.filter(
-        (pl.col("Điểm quy đổi") >= self_score - 1) & 
-        (pl.col("Điểm quy đổi") <= self_score + 1)
+        (pl.col("Điểm quy đổi") >= self_score - 1)
+        & (pl.col("Điểm quy đổi") <= self_score + 1)
     )
+
     df_safety = df_result.filter(
-        (pl.col("Điểm quy đổi") >= floor_score - 1) & 
-        (pl.col("Điểm quy đổi") <= floor_score + 1)
+        (pl.col("Điểm quy đổi") >= floor_score - 1)
+        & (pl.col("Điểm quy đổi") <= floor_score + 1)
     )
-    df_top20 = df_result.sort("Điểm quy đổi", descending=True).head(20)
 
-    df_top20_display = df_top20.rename({
-        "Điểm quy đổi": "Điểm",
-        "Tổ hợp_chọn": "Tổ hợp"
-    })
+    # ------------------------------------------------
+    # Top 20
+    # ------------------------------------------------
+
+    df_top20 = (
+        df_result
+        .sort(
+            "Điểm quy đổi",
+            descending=True,
+        )
+        .head(20)
+        .rename({
+            "Điểm quy đổi": "Điểm",
+            "Tổ hợp_chọn": "Tổ hợp",
+        })
+    )
 
 
-    # --- 5. CẤU HÌNH BIỂU ĐỒ ---    
+
+    # ================================================================
+    # 4. FIGURE — OVERALL DISTRIBUTION
+    # ================================================================
+
     fig_overall = px.histogram(
-        df_result.to_pandas(), 
-        x="Điểm quy đổi", 
-        title="Phổ điểm toàn cảnh", 
-        color_discrete_sequence=['#3498db'],
+        df_result.to_pandas(),
+        x="Điểm quy đổi",
+        title=None,
         hover_data={
-            "Điểm quy đổi": False
-        }
+            "Điểm quy đổi": False,
+        },
     )
 
     fig_overall.update_traces(
         xbins=dict(
-            start=0, 
-            end=30 + 0.2, 
-            size=0.25
+            start=0,
+            end=30.2,
+            size=0.25,
         ),
-        hovertemplate="<br>".join([
-            "<b>Mức điểm: %{x}</b>",
-            "Số lượng: %{y} thí sinh",
-        ])
+        hovertemplate=(
+            "<b>Mức điểm: %{x}</b><br>"
+            "Số lượng: %{y} thí sinh"
+            "<extra></extra>"
+        ),
     )
 
     fig_overall.add_vline(
-        x=floor_score, 
-        line_dash="dash", 
-        line_color="red", 
+        x=floor_score,
+        line_dash="dash",
         annotation_text="Điểm sàn",
-        annotation_position="top left"
+        annotation_position="top left",
     )
 
     fig_overall.add_vline(
-        x=self_score, 
-        line_dash="dash", 
-        line_color="#DAA520", 
-        annotation_text="Điểm của bạn"
+        x=self_score,
+        line_dash="dash",
+        annotation_text="Điểm của bạn",
+        annotation_position="top right",
     )
 
     fig_overall.update_xaxes(
-        range=[0, 31],        
-        constrain="domain",   
-        nticks=10             
+        range=[0, 30.5],
+        constrain="domain",
+        nticks=10,
+        title="Điểm",
+    )
+
+    fig_overall.update_yaxes(
+        title="Số thí sinh",
     )
 
     build_strict_graph(fig_overall)
 
 
 
+    # ================================================================
+    # 5. FIGURE — COMPETITION ZOOM
+    # ================================================================
+
     if df_comp.is_empty():
-        fig_comp = (
-            go.Figure()
-                .add_annotation(
-                    text="Không có thí sinh trong vùng điểm này", 
-                    showarrow=False
-                )
+
+        fig_comp = go.Figure()
+
+        fig_comp.add_annotation(
+            text="Không có thí sinh trong vùng điểm này.",
+            showarrow=False,
         )
-    
+
     else:
+
         fig_comp = px.histogram(
-            df_comp.to_pandas(), 
-            x="Điểm quy đổi", 
-            color_discrete_sequence=['#e74c3c'], 
-            title="Cận cảnh cạnh tranh (Bạn ± 1đ)"
+            df_comp.to_pandas(),
+            x="Điểm quy đổi",
+            title=None,
         )
-    
+
         fig_comp.update_traces(
-            xbins=dict(size=0.2)
+            xbins=dict(
+                size=0.2,
+            ),
+            hovertemplate=(
+                "<b>Mức điểm: %{x}</b><br>"
+                "Số lượng: %{y} thí sinh"
+                "<extra></extra>"
+            ),
         )
-    
+
         fig_comp.add_vline(
-            x=self_score, 
-            line_dash="dot", 
-            line_color="#27ae60", 
-            annotation_text="Vị trí của bạn"
+            x=self_score,
+            line_dash="dot",
+            annotation_text="Bạn",
+            annotation_position="top",
         )
-    
+
+        fig_comp.update_xaxes(
+            title="Điểm quy đổi",
+        )
+
+        fig_comp.update_yaxes(
+            title="Số thí sinh",
+        )
+
     build_strict_graph(fig_comp)
 
 
-    fig_safety = px.histogram(
-        df_safety.to_pandas(), 
-        x="Điểm quy đổi", 
-        color_discrete_sequence=['#2ecc71'], 
-        title="Cận cảnh an toàn (Sàn ± 1đ)"
-    )
 
-    fig_safety.update_traces(
-        xbins=dict(size=0.2)
-    )
-    
-    fig_safety.add_vline(
-        x=floor_score, 
-        line_dash="dot", 
-        line_color="#9935cc", 
-        annotation_text="Sàn"
-    )
+    # ================================================================
+    # 6. FIGURE — FLOOR ZOOM
+    # ================================================================
+
+    if df_safety.is_empty():
+
+        fig_safety = go.Figure()
+
+        fig_safety.add_annotation(
+            text="Không có thí sinh trong vùng điểm sàn.",
+            showarrow=False,
+        )
+
+    else:
+
+        fig_safety = px.histogram(
+            df_safety.to_pandas(),
+            x="Điểm quy đổi",
+            title=None,
+        )
+
+        fig_safety.update_traces(
+            xbins=dict(
+                size=0.2,
+            ),
+            hovertemplate=(
+                "<b>Mức điểm: %{x}</b><br>"
+                "Số lượng: %{y} thí sinh"
+                "<extra></extra>"
+            ),
+        )
+
+        fig_safety.add_vline(
+            x=floor_score,
+            line_dash="dot",
+            annotation_text="Điểm sàn",
+            annotation_position="top",
+        )
+
+        fig_safety.update_xaxes(
+            title="Điểm quy đổi",
+        )
+
+        fig_safety.update_yaxes(
+            title="Số thí sinh",
+        )
+
     build_strict_graph(fig_safety)
 
 
-    # --- 6. TRẢ VỀ GIAO DIỆN ---
-    return html.Div([
-        # --- HEADER BÁO CÁO ---
-        html.Div([
-            html.H2(
-                f"BÁO CÁO PHÂN TÍCH VỊ THẾ {year}", 
-                className="text-center fw-bold text-dark mt-2 mb-0"
-            ),
-            html.P(
-                f"Phương pháp chuẩn hóa: {mode.upper()}", 
-                className="text-center text-muted small mb-4"
-            ),
-        ]),
 
-        # --- CỤM THẺ CHỈ SỐ (KPI Cards) ---
-        dbc.Row([
-            dbc.Col(
-                dbc.Card([
-                    dbc.CardHeader(
-                        "VỊ THẾ TỔNG QUÁT", 
-                        className="text-center small fw-bold py-1"
+    # ================================================================
+    # 7. CONTEXT HEADER
+    # ================================================================
+
+    comb_text = ", ".join(combs)
+
+    header = dbc.Card(
+        dbc.CardBody([
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.H2(
+                                "Phân tích vị thế",
+                                className="fw-bold mb-1",
+                            ),
+                            html.P(
+                                f"Kỳ thi tốt nghiệp THPT năm {year}",
+                                className="text-muted mb-0",
+                            ),
+                        ],
                     ),
-                    dbc.CardBody([
-                        html.H4(
-                            f"Hạng {overall_rank:,}", 
-                            className="text-primary text-center mb-0"
-                        ),
-                        html.P(
-                            f"Trên tổng {total_count:,} thí sinh", 
-                            className="text-center small text-muted mb-2"
-                        ),
-                        html.Div(
-                            dbc.Badge(
-                                f"PR: {overall_pr:.2f}%", 
-                                color="info", 
-                                className="w-100"
-                            ), 
-                            className="text-center"
-                        )
-                    ])
-                ], className="shadow-sm border-0"), 
-                width=12, 
-                md=6, 
-                className="mb-3"
-            ),
-            dbc.Col(
-                dbc.Card([
-                    dbc.CardHeader(
-                        "VỊ THẾ CẠNH TRANH", 
-                        className="text-center small fw-bold py-1"
+
+                    dbc.Badge(
+                        mode.upper(),
+                        color="secondary",
+                        className="px-3 py-2",
                     ),
-                    dbc.CardBody([
-                        html.H4(
-                            f"Hạng {floor_rank:,}", 
-                            className="text-dark text-center mb-0"
-                        ),
-                        html.P(
-                            f"Trong nhóm đủ điểm sàn (>{floor_score})", 
-                            className="text-center small text-muted mb-2"
-                        ),
-                        html.Div(
-                            dbc.Badge(
-                                f"An toàn: {floor_pr:.2f}%", 
-                                color="success" if floor_pr > 50 else "warning", 
-                                className="w-100"
-                            ), className="text-center"
-                        )
-                    ])
-                ], className="shadow-sm border-0"), 
-                width=12, 
-                md=6, 
-                className="mb-3"
-            ),
-        ], className="mb-4"),
-
-
-        # --- 1. BIỂU ĐỒ PHỔ ĐIỂM TOÀN CẢNH ---
-        dbc.Card([
-            dbc.CardBody([
-                html.H5(
-                    [
-                        html.I(className="bi bi-bar-chart-line me-2"), 
-                        "1. Phổ điểm hệ thống"
-                    ], 
-                    className="card-title"
+                ],
+                className=(
+                    "d-flex justify-content-between "
+                    "align-items-start"
                 ),
-                dcc.Graph(
-                    figure=fig_overall, 
-                    config={
-                        'displayModeBar': True,
-                        'scrollZoom': True,
-                        'responsive': True
-                    },
-                    style={"height": "450px"} 
-                )
-            ])
-        ], className="shadow-sm border-0 mb-4"),
-
-
-        # --- 2 & 3. CẬN CẢNH (ZOOM) ---
-        dbc.Row([
-            dbc.Col(
-                dbc.Card([
-                    dbc.CardBody([
-                        html.H6(
-                            "2. Cận cảnh tại vùng điểm của bạn", 
-                            className="fw-bold"
-                        ),
-                        dcc.Graph(
-                            figure=fig_comp, 
-                            config={
-                                'displayModeBar': False
-                            }
-                        )
-                    ])
-                ], className="shadow-sm border-0 mb-4"), 
-                width=12, 
-                lg=6
             ),
-            dbc.Col(
-                dbc.Card([
-                    dbc.CardBody([
-                        html.H6(
-                            "3. Cận cảnh tại vùng điểm sàn", 
-                            className="fw-bold"
-                        ),
-                        dcc.Graph(
-                            figure=fig_safety, 
-                            config={
-                                'displayModeBar': False
-                            }
-                        )
-                    ])
-                ], className="shadow-sm border-0 mb-4"), 
-                width=12, 
-                lg=6
-            ),
+
+            html.Hr(),
+
+            dbc.Row([
+                dbc.Col([
+                    html.Small(
+                        "TỔ HỢP PHÂN TÍCH",
+                        className="text-muted fw-bold",
+                    ),
+                    html.Div(
+                        comb_text,
+                        className="fw-semibold",
+                    ),
+                ], xs=12, md=4),
+
+                dbc.Col([
+                    html.Small(
+                        "ĐIỂM CỦA BẠN",
+                        className="text-muted fw-bold",
+                    ),
+                    html.Div(
+                        f"{self_score:.2f}",
+                        className="fw-bold",
+                    ),
+                ], xs=6, md=4),
+
+                dbc.Col([
+                    html.Small(
+                        "ĐIỂM SÀN",
+                        className="text-muted fw-bold",
+                    ),
+                    html.Div(
+                        f"{floor_score:.2f}",
+                        className="fw-bold",
+                    ),
+                ], xs=6, md=4),
+            ]),
         ]),
+        className="shadow-sm border-0 mb-4",
+    )
 
 
-        # --- 4. BẢNG TOP 20 TINH HOA ---
-        # Bước 2: Đưa vào Component
-        dbc.Card([
-            dbc.CardHeader([
-                html.I(className="bi bi-trophy me-2 text-warning"),
-                "4. Top 20 thí sinh dẫn đầu"
-            ], className="fw-bold"),
-            dbc.CardBody([
-                dash_table.DataTable(
-                    data=df_top20_display.to_dicts(),
-                    columns=[
-                        {"name": i, "id": i} for i in df_top20_display.columns
-                    ],
-                    style_cell={
-                        'minWidth': '60px', 
-                        'width': '100px', 
-                        'maxWidth': '150px', 
-                        'overflow': 'hidden',
-                        'textOverflow': 'ellipsis',
-                        'fontSize': '11px', 
-                        'padding': '6px'   
-                    },
-                )
-            ], className="p-1")
-        ], className="shadow-sm border-0 mb-5")
+
+    # ================================================================
+    # 8. KPI CARDS
+    # ================================================================
+
+    overall_rank_text = f"#{overall_rank:,}"
+
+    if floor_rank is None:
+        floor_rank_text = "—"
+        floor_pr_text = "Không áp dụng"
+    else:
+        floor_rank_text = f"#{floor_rank:,}"
+        floor_pr_text = f"PR {floor_pr:.2f}%"
+
+    kpi_cards = dbc.Row([
+
+        # ------------------------------------------------------------
+        # Điểm
+        # ------------------------------------------------------------
+
+        dbc.Col(
+            dbc.Card([
+                dbc.CardBody([
+                    html.Div(
+                        [
+                            html.I(
+                                className="bi bi-bullseye me-2"
+                            ),
+                            "ĐIỂM CỦA BẠN",
+                        ],
+                        className=(
+                            "text-muted small fw-bold mb-2"
+                        ),
+                    ),
+
+                    html.Div(
+                        f"{self_score:.2f}",
+                        className=(
+                            "display-6 fw-bold text-center"
+                        ),
+                    ),
+
+                    html.Div(
+                        "điểm",
+                        className=(
+                            "text-muted text-center small"
+                        ),
+                    ),
+                ])
+            ], className="shadow-sm border-0 h-100"),
+            xs=12,
+            md=4,
+            className="mb-3",
+        ),
+
+        # ------------------------------------------------------------
+        # Overall position
+        # ------------------------------------------------------------
+
+        dbc.Col(
+            dbc.Card([
+                dbc.CardBody([
+                    html.Div(
+                        [
+                            html.I(
+                                className="bi bi-bar-chart-line me-2"
+                            ),
+                            "VỊ THẾ TỔNG QUÁT",
+                        ],
+                        className=(
+                            "text-muted small fw-bold mb-2"
+                        ),
+                    ),
+
+                    html.Div(
+                        overall_rank_text,
+                        className=(
+                            "display-6 fw-bold text-center"
+                        ),
+                    ),
+
+                    html.Div(
+                        f"PR {overall_pr:.2f}% "
+                        f"· {total_count:,} thí sinh",
+                        className=(
+                            "text-muted text-center small"
+                        ),
+                    ),
+                ])
+            ], className="shadow-sm border-0 h-100"),
+            xs=12,
+            md=4,
+            className="mb-3",
+        ),
+
+        # ------------------------------------------------------------
+        # Floor position
+        # ------------------------------------------------------------
+
+        dbc.Col(
+            dbc.Card([
+                dbc.CardBody([
+                    html.Div(
+                        [
+                            html.I(
+                                className="bi bi-shield-check me-2"
+                            ),
+                            "VỊ THẾ TRÊN SÀN",
+                        ],
+                        className=(
+                            "text-muted small fw-bold mb-2"
+                        ),
+                    ),
+
+                    html.Div(
+                        floor_rank_text,
+                        className=(
+                            "display-6 fw-bold text-center"
+                        ),
+                    ),
+
+                    html.Div(
+                        floor_pr_text,
+                        className=(
+                            "text-muted text-center small"
+                        ),
+                    ),
+                ])
+            ], className="shadow-sm border-0 h-100"),
+            xs=12,
+            md=4,
+            className="mb-3",
+        ),
+
+    ], className="mb-4")
+
+
+
+    # ================================================================
+    # 9. INSIGHT
+    # ================================================================
+
+    if self_score < floor_score:
+
+        insight_text = (
+            f"Điểm của bạn ({self_score:.2f}) đang thấp hơn "
+            f"điểm sàn ({floor_score:.2f}). "
+            "Vị thế trong nhóm đạt điểm sàn chưa được tính."
+        )
+
+        insight_color = "warning"
+
+    else:
+
+        insight_text = (
+            f"Điểm của bạn ({self_score:.2f}) đang cao hơn "
+            f"điểm sàn ({floor_score:.2f}). "
+            f"Bạn đang ở khoảng PR {overall_pr:.2f}% "
+            "trong phạm vi dữ liệu phân tích."
+        )
+
+        insight_color = "info"
+
+    insight = dbc.Alert(
+        [
+            html.Div(
+                [
+                    html.I(
+                        className="bi bi-lightbulb me-2"
+                    ),
+                    html.Strong("Nhận định"),
+                ],
+                className="mb-1",
+            ),
+            html.Div(insight_text),
+        ],
+        color=insight_color,
+        className="mb-4",
+    )
+
+
+
+    # ================================================================
+    # 10. OVERALL DISTRIBUTION
+    # ================================================================
+
+    overall_section = dbc.Card([
+        dbc.CardBody([
+
+            html.H5(
+                [
+                    html.I(
+                        className="bi bi-bar-chart-line me-2"
+                    ),
+                    "Phổ điểm toàn cảnh",
+                ],
+                className="fw-bold mb-1",
+            ),
+
+            html.P(
+                "Phân bố điểm của toàn bộ thí sinh trong "
+                "phạm vi phân tích.",
+                className="text-muted small mb-3",
+            ),
+
+            dcc.Graph(
+                figure=fig_overall,
+                config={
+                    "displayModeBar": True,
+                    "scrollZoom": True,
+                    "responsive": True,
+                },
+                style={
+                    "height": "450px",
+                },
+            ),
+
+        ])
+    ], className="shadow-sm border-0 mb-4")
+
+
+
+    # ================================================================
+    # 11. LOCAL ANALYSIS
+    # ================================================================
+
+    competition_card = dbc.Card([
+        dbc.CardBody([
+
+            html.H5(
+                [
+                    html.I(
+                        className="bi bi-search me-2"
+                    ),
+                    "Vùng cạnh tranh",
+                ],
+                className="fw-bold mb-1",
+            ),
+
+            html.P(
+                "Phân bố thí sinh trong khoảng ±1 điểm "
+                "quanh điểm của bạn.",
+                className="text-muted small mb-3",
+            ),
+
+            dcc.Graph(
+                figure=fig_comp,
+                config={
+                    "displayModeBar": False,
+                    "responsive": True,
+                },
+                style={
+                    "height": "350px",
+                },
+            ),
+
+        ])
+    ], className="shadow-sm border-0 h-100")
+
+    safety_card = dbc.Card([
+        dbc.CardBody([
+
+            html.H5(
+                [
+                    html.I(
+                        className="bi bi-shield-check me-2"
+                    ),
+                    "Vùng điểm sàn",
+                ],
+                className="fw-bold mb-1",
+            ),
+
+            html.P(
+                "Phân bố thí sinh trong khoảng ±1 điểm "
+                "quanh điểm sàn.",
+                className="text-muted small mb-3",
+            ),
+
+            dcc.Graph(
+                figure=fig_safety,
+                config={
+                    "displayModeBar": False,
+                    "responsive": True,
+                },
+                style={
+                    "height": "350px",
+                },
+            ),
+
+        ])
+    ], className="shadow-sm border-0 h-100")
+
+    local_analysis = dbc.Row([
+
+        dbc.Col(
+            competition_card,
+            xs=12,
+            lg=6,
+            className="mb-4",
+        ),
+
+        dbc.Col(
+            safety_card,
+            xs=12,
+            lg=6,
+            className="mb-4",
+        ),
+
+    ])
+
+
+
+    # ================================================================
+    # 12. TOP 20
+    # ================================================================
+
+    top20_table = dbc.Card([
+        dbc.CardHeader(
+            [
+                html.I(
+                    className="bi bi-trophy me-2"
+                ),
+                "Top 20 thí sinh",
+            ],
+            className="fw-bold",
+        ),
+
+        dbc.CardBody(
+            dash_table.DataTable(
+                data=df_top20.to_dicts(),
+                columns=[
+                    {
+                        "name": column,
+                        "id": column,
+                    }
+                    for column in df_top20.columns
+                ],
+                style_table={
+                    "overflowX": "auto",
+                },
+                style_cell={
+                    "minWidth": "70px",
+                    "width": "100px",
+                    "maxWidth": "160px",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "fontSize": "12px",
+                    "padding": "8px",
+                    "textAlign": "center",
+                },
+                style_header={
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                },
+                page_action="none",
+            ),
+            className="p-2",
+        ),
+    ], className="shadow-sm border-0 mb-4")
+
+
+
+    # ================================================================
+    # 13. FINAL DASHBOARD
+    # ================================================================
+
+    return html.Div([
+        header,
+        kpi_cards,
+        insight,
+        overall_section,
+        html.Div(
+            [
+                html.H4(
+                    "Phân tích chi tiết",
+                    className="fw-bold mb-3",
+                ),
+                local_analysis,
+            ]
+        ),
+
+        html.Div(
+            [
+                html.H4(
+                    "Dữ liệu tham chiếu",
+                    className="fw-bold mb-3",
+                ),
+                top20_table,
+            ]
+        ),
+
     ])

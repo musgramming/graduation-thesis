@@ -435,7 +435,7 @@ def full_processing(year: int):
     DF_CHINH.collect().write_parquet(
         f"./output/bang_diem/bang_diem-{year}.parquet",
         compression="zstd",
-        compression_level=19,
+        compression_level=21,
         use_pyarrow=True,
     )
 
@@ -541,7 +541,7 @@ def full_processing(year: int):
         .write_parquet(
             f"./output/bang_diem_to_hop/bang_diem_to_hop-{year}.parquet",
             compression="zstd",
-            compression_level=19,
+            compression_level=21,
             use_pyarrow=True,
         )
     )
