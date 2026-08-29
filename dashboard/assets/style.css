@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    overflow-x: hidden;
+}
+
+/* --- HIỆU ỨNG CARD (GLASSMORPHISM & SHADOW) --- */
+.card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(222, 226, 230, 0.6) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.03) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* --- HEADER & NAVIGATION --- */
+header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e9ecef !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* Sidebar tùy chỉnh lại cho mượt mà */
+.offcanvas {
+    border-right: none !important;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.08);
+}
+
+.offcanvas-header {
+    padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+}
+
+.offcanvas-body {
+    padding: 1rem 1.25rem;
+}
+
+/* Sidebar NavLink Link Styling */
+.offcanvas .nav-pills .nav-link {
+    color: #495057 !important;
+    font-weight: 500;
+    border-radius: 10px !important;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 0.3rem;
+}
+
+.offcanvas .nav-pills .nav-link:hover {
+    background-color: #f1f3f5 !important;
+    color: #0d6efd !important;
+    padding-left: 1.25rem !important; /* Hiệu ứng dịch chuyển nhẹ sang phải khi hover */
+}
+
+.offcanvas .nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(13, 110, 237, 0.3);
+}
+
+/* --- FORM CONTROLS (INPUT, DROPDOWN, SLIDER) --- */
+.form-control, .form-select {
+    border-radius: 10px !important;
+    border: 1px solid #ced4da !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 4px rgba(13, 110, 237, 0.15) !important;
+}
+
+/* --- NÚT BẤM (BUTTONS) --- */
+.btn {
+    border-radius: 12px !important;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(13, 110, 237, 0.3);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 6px 16px rgba(13, 110, 237, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #198754 0%, #157347 100%) !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.btn-success:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 6px 16px rgba(25, 135, 84, 0.4);
+    transform: translateY(-1px);
+}
+
+#sidebar-toggle:hover {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* --- HERO SECTION & TRANG CHỦ --- */
+.display-5 {
+    letter-spacing: -0.5px;
+    color: #1a1e21;
+}
+
+/* Hiệu ứng bo tròn và đổ bóng cho các badge công nghệ ở trang chủ */
+.badge.rounded-pill {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* --- FOOTER --- */
+footer {
+    background-color: #1a1e21 !important;
+    border-top: 1px solid #2c3034 !important;
+}
+
+/* --- SCROLLBAR TÙY CHỈNH CHO MƯỚT MÁ --- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f3f5;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}
+
+/* --- TÙY CHỈNH RIÊNG CHO TRANG TRA CỨU SBD --- */
+
+/* Khung kết quả điểm số (hiệu ứng nền mờ nhẹ, nét đứt sang trọng) */
+.border.border-dashed {
+    border: 2px dashed #cbd5e0 !important;
+    background: rgba(248, 249, 250, 0.6) !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease;
+}
+
+.border.border-dashed:hover {
+    border-color: #0d6efd !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* RadioItems phương pháp quy đổi (cân chỉnh lề cho mướt) */
+.form-check-inline {
+    margin-right: 1rem !important;
+    font-weight: 500;
+}
+
+/* Tùy chỉnh thanh trượt Slider để đồng bộ giao diện */
+.rc-slider-track {
+    background-color: #0d6efd !important;
+}
+
+.rc-slider-handle {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 8px rgba(13, 110, 237, 0.4);
+}
+
+/* Cố định phần sticky bên trái cho mượt mà khi cuộn trang */
+.sticky-top {
+    z-index: 1020 !important;
+}
+
+/* --- TÙY CHỈNH RIÊNG CHO TRANG GIẢ LẬP KỊCH BẢN (KHÔNG SBD) --- */
+
+/* Các ô input nhập điểm số (căn giữa, tạo cảm giác như một bảng tính chuyên nghiệp) */
+.form-control[type="number"] {
+    text-align: center;
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+/* Khung hiển thị điểm tổ hợp cá nhân (nền mờ, viền nét đứt tinh tế) */
+.border-dashed {
+    border: 2px dashed #cbd5e0 !important;
+    background: rgba(248, 249, 250, 0.7) !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease;
+}
+
+.border-dashed:hover {
+    border-color: #0d6efd !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Khu vực chứa danh sách tổ hợp so sánh */
+#_dash_container .bg-white.rounded.border, 
+div[id*="combs-list-container"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 0.75rem !important;
+}
+
+/* Tùy chỉnh màu sắc thanh trượt điểm sàn ở trang giả lập */
+.rc-slider-track {
+    background-color: #198754 !important; /* Xanh lá tương ứng nút Chạy kịch bản */
+}
+
+.rc-slider-handle {
+    border-color: #198754 !important;
+    box-shadow: 0 0 8px rgba(25, 135, 84, 0.4);
+}

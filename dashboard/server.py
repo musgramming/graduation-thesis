@@ -9,8 +9,19 @@ from api.not_access import api_bp as not_access_bp
 
 
 server = Flask(__name__)
+
+
 server.register_blueprint(not_access_bp)
-CORS(server, resources={r"/*": {"origins": "*"}})
+
+
+CORS(
+    server, 
+    resources={
+        r"/*": {
+            "origins": "*"
+        }
+    }
+)
 
 
 app = Dash(
