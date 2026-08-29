@@ -1,12 +1,21 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 
-from utils.naming import naming_with_sbd
 from utils.persistent import make_persistent
+from .list_of_id import pid
 
 
+
+
+
+# ---------------------------------------------------------------------------
+# LEFT LAYOUT
+# ---------------------------------------------------------------------------
 left_layout = html.Div([
+
+    # =======================================================================
     # CARD 1: KẾT QUẢ THI
+    # =======================================================================
     dbc.Card([
         dbc.CardHeader(
             "Kết quả thi Tốt nghiệp THPT của bạn",
@@ -14,7 +23,9 @@ left_layout = html.Div([
         ),
 
         dbc.CardBody([
+            # ----------------------------------------------------------------
             # SBD
+            # ----------------------------------------------------------------
             dbc.Row([
                 dbc.Label(
                     "Số báo danh",
@@ -26,7 +37,7 @@ left_layout = html.Div([
                 dbc.Col([
                     make_persistent(
                         dbc.Input(
-                            id=naming_with_sbd("sbd"),
+                            id=pid("sbd"),
                             type="text",
                             minlength=8,
                             maxlength=8,
@@ -35,14 +46,17 @@ left_layout = html.Div([
                             className="shadow-sm"
                         )
                     ),
+
                     dbc.FormFeedback(
-                        id=naming_with_sbd("sbd-feedback"),
+                        id=pid("sbd-feedback"),
                         type="invalid"
                     ),
                 ], width=12, md=8),
             ], className="mb-3 align-items-center"),
 
+            # ----------------------------------------------------------------
             # Năm thi
+            # ----------------------------------------------------------------
             dbc.Row([
                 dbc.Label(
                     "Năm thi",
@@ -54,7 +68,7 @@ left_layout = html.Div([
                 dbc.Col(
                     make_persistent(
                         dbc.Input(
-                            id=naming_with_sbd("year"),
+                            id=pid("year"),
                             type="number",
                             min=2025,
                             step=1,
@@ -67,21 +81,25 @@ left_layout = html.Div([
                 ),
             ], className="mb-4 align-items-center"),
 
+            # ----------------------------------------------------------------
             # Nút Tra cứu
+            # ----------------------------------------------------------------
             html.Div(
                 dbc.Button(
                     [
                         html.I(className="bi bi-search me-2"),
                         "Tra cứu"
                     ],
-                    id=naming_with_sbd("search-info"),
+                    id=pid("search-info"),
                     color="primary",
                     className="w-100 shadow-sm fw-bold"
                 ),
                 className="mb-4"
             ),
 
+            # ----------------------------------------------------------------
             # Kết quả sau tra cứu
+            # ----------------------------------------------------------------
             html.Div([
                 dbc.Row([
                     dbc.Label(
@@ -94,13 +112,14 @@ left_layout = html.Div([
                     dbc.Col([
                         make_persistent(
                             dcc.Dropdown(
-                                id=naming_with_sbd("comb"),
+                                id=pid("comb"),
                                 placeholder="Chọn tổ hợp...",
                                 clearable=False
                             )
                         ),
+
                         html.Div(
-                            id=naming_with_sbd("status-output-2"),
+                            id=pid("status-output-2"),
                             className="small mt-1"
                         )
                     ], width=12, md=8),
@@ -116,7 +135,7 @@ left_layout = html.Div([
 
                     dbc.Col(
                         html.Div(
-                            id=naming_with_sbd("score"),
+                            id=pid("score"),
                             children="---",
                             className="h4 fw-bold text-primary mb-0"
                         ),
@@ -130,7 +149,11 @@ left_layout = html.Div([
 
 
 
+
+
+    # =======================================================================
     # CARD 2: XÂY DỰNG KỊCH BẢN
+    # =======================================================================
     dbc.Card([
         dbc.CardHeader(
             "Xây dựng kịch bản",
@@ -138,6 +161,9 @@ left_layout = html.Div([
         ),
 
         dbc.CardBody([
+            # ----------------------------------------------------------------
+            # Tổ hợp so sánh
+            # ----------------------------------------------------------------
             dbc.Row([
                 dbc.Label(
                     "Tổ hợp so sánh",
@@ -148,7 +174,7 @@ left_layout = html.Div([
 
                 dbc.Col(
                     dcc.Dropdown(
-                        id=naming_with_sbd("combs-script"),
+                        id=pid("combs-script"),
                         options=[],
                         value=[],
                         multi=True,
@@ -161,6 +187,9 @@ left_layout = html.Div([
                 )
             ], className="mb-4"),
 
+            # ----------------------------------------------------------------
+            # Điểm sàn
+            # ----------------------------------------------------------------
             dbc.Row([
                 dbc.Col([
                     dbc.Label(
@@ -170,7 +199,7 @@ left_layout = html.Div([
 
                     dbc.InputGroup([
                         dbc.Input(
-                            id=naming_with_sbd("floor-score-input"),
+                            id=pid("floor-score-input"),
                             type="number",
                             min=15,
                             max=30,
@@ -178,11 +207,12 @@ left_layout = html.Div([
                             value=15,
                             className="shadow-sm",
                         ),
+
                         dbc.InputGroupText("điểm"),
                     ], className="mb-2"),
 
                     dcc.Slider(
-                        id=naming_with_sbd("floor-score-slider"),
+                        id=pid("floor-score-slider"),
                         min=15,
                         max=30,
                         step=0.05,
@@ -196,7 +226,7 @@ left_layout = html.Div([
                     ),
 
                     dbc.Alert(
-                        id=naming_with_sbd("floor-score-warning"),
+                        id=pid("floor-score-warning"),
                         is_open=False,
                         color="warning",
                         className="p-2 small mt-2 mb-0"
@@ -206,6 +236,9 @@ left_layout = html.Div([
 
             html.Hr(),
 
+            # ----------------------------------------------------------------
+            # Phương pháp quy đổi
+            # ----------------------------------------------------------------
             html.Label(
                 "Phương pháp quy đổi:",
                 className="fw-bold small mb-2 d-block"
@@ -219,7 +252,7 @@ left_layout = html.Div([
                         {"label": " Robust", "value": "robust"}
                     ],
                     value="raw-score",
-                    id=naming_with_sbd("mode-selection"),
+                    id=pid("mode-selection"),
                     labelStyle={
                         "display": "inline-block",
                         "marginRight": "15px",
@@ -230,12 +263,15 @@ left_layout = html.Div([
                 )
             ),
 
+            # ----------------------------------------------------------------
+            # Nút xây kịch bản
+            # ----------------------------------------------------------------
             dbc.Button(
                 [
                     html.I(className="bi bi-lightning-fill me-2"),
                     "Xây kịch bản"
                 ],
-                id=naming_with_sbd("analysis"),
+                id=pid("analysis"),
                 color="success",
                 disabled=True,
                 className="w-100 shadow fw-bold py-2"
@@ -245,6 +281,12 @@ left_layout = html.Div([
 ], className="sticky-top", style={"top": "1rem"})
 
 
+
+
+
+# ---------------------------------------------------------------------------
+# RIGHT LAYOUT
+# ---------------------------------------------------------------------------
 right_layout = dbc.Card([
     dbc.CardHeader(
         [
@@ -258,28 +300,31 @@ right_layout = dbc.Card([
 
     dbc.CardBody([
         dcc.Loading(
-            id=naming_with_sbd("loading-analysis"),
+            id=pid("loading-analysis"),
             type="circle",
-            children=html.Div([
-                dbc.Alert(
-                    [
-                        html.Div(
-                            html.I(className="bi bi-bar-chart-line fs-2"),
-                            className="mb-2"
-                        ),
-                        html.Div(
-                            "Chưa có dữ liệu phân tích",
-                            className="fw-bold mb-1"
-                        ),
-                        html.Small(
-                            "Nhập số báo danh và chọn “Tra cứu” để bắt đầu."
-                        )
-                    ],
-                    color="light",
-                    className="text-center border-0 py-5 mb-0"
-                )
+            children=html.Div(
+                [
+                    dbc.Alert(
+                        [
+                            html.Div(
+                                html.I(className="bi bi-bar-chart-line fs-2"),
+                                className="mb-2"
+                            ),
+
+                            html.Div(
+                                "Chưa có dữ liệu phân tích",
+                                className="fw-bold mb-1"
+                            ),
+
+                            html.Small(
+                                'Nhập số báo danh, chọn "Tra cứu", rồi nhấn nút "Xây dựng kịch bản" để bắt đầu.'
+                            )
+                        ],
+                        color="light",
+                        className="text-center border-0 py-5 mb-0"
+                    )
                 ],
-                id=naming_with_sbd("full-div"),
+                id=pid("full-div"),
                 style={"minHeight": "500px"}
             )
         )
@@ -287,6 +332,12 @@ right_layout = dbc.Card([
 ], className="shadow-sm border-0 h-100")
 
 
+
+
+
+# ---------------------------------------------------------------------------
+# PAGE LAYOUT
+# ---------------------------------------------------------------------------
 layout = dbc.Container([
     dbc.Row([
         dbc.Col(
@@ -295,6 +346,7 @@ layout = dbc.Container([
             md=4,
             className="mb-4 p-1"
         ),
+
         dbc.Col(
             right_layout,
             width=12,

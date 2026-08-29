@@ -1,0 +1,77 @@
+Hello! Call me Musgramming. To be short, just call me Mus. 
+
+*********************************************************************************************
+
+DESCRIBES:
+
+- I'm a recent graduate from NLU (Nong Lam University), majoring in Information Systems
+- GPA: 3.34 / 4.00 (8.04 / 10.00)
+- Completed: 161 credits
+- Expected graduation: 2026
+
+*********************************************************************************************
+
+GRADUATION THESIS:
+
+- Score: 9.3 / 10.0
+- Credits: 6
+- Data Analytics & Decision Support Dashboard
+- Source code: https://github.com/musgramming/graduation-thesis
+- Live demo: https://graduation-thesis-cxlt.onrender.com/
+
+*********************************************************************************************
+
+CORE SKILLS:
+
+- SKILLS:
+
+- Data Collection & Preprocessing
+  Pandas, Polars
+
+- Data Analysis
+  Jupyter Notebook, Google Colab
+
+- Data Visualization
+  Plotly
+
+- Interactive Dashboard Development
+  Dash
+
+- Machine Learning
+  Scikit-learn (practical usage)
+
+- SQL
+  Basic SQL
+
+*********************************************************************************************
+
+ADDITIONAL SKILLS:
+
+- Music Composition
+
+*********************************************************************************************
+
+CERTIFICATE:
+
+- 1600/1900 for `Intro to SQL` in Codechef in first-time
+- A lot of certificates in Kaggle Learn
+
+*********************************************************************************************
+
+PAGES:
+
+- email: musband1113@gmail.com
+- github: https://github.com/musgramming
+- instagram: https://instagram.com/musgramming
+- discord: https://discord.com/musgramming
+- facebook: https://www.facebook.com/profile.php?id=61591534711658
+
+*********************************************************************************************
+
+I hope when we work together, we can bring insights into value in our/your project. See you soon,
+Mus
+
+
+
+Last update: 3:24 PM, 4/16/2026
+

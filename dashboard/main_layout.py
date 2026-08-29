@@ -2,12 +2,20 @@ import dash
 from dash import html, page_container, callback, Input, Output, State, MATCH, ALL
 import dash_bootstrap_components as dbc
 
+
+
+
+
 # =========================================================
 #                       CONSTANTS
 # =========================================================
 
 APP_TITLE = "Phân tích Dữ liệu thi Tốt nghiệp THPT"
 APP_BADGE = "Đồ án tốt nghiệp"
+
+
+
+
 
 # =========================================================
 #                       STYLES
@@ -52,6 +60,10 @@ STYLES = {
     },
 }
 
+
+
+
+
 # =========================================================
 #                    NAVIGATION HELPERS
 # =========================================================
@@ -86,7 +98,10 @@ def get_navigation():
                 href=page.get("path"),
                 active="exact",
                 className="mb-1 rounded py-2 px-3",
-                id={"type": "sidebar-link", "index": page.get("path")}
+                id={
+                    "type": "sidebar-link", 
+                    "index": page.get("path")
+                }
             )
         )
 
@@ -126,6 +141,8 @@ sidebar = dbc.Offcanvas(
     backdrop=True, 
     keyboard=True,  
 )
+
+
 
 
 
@@ -244,6 +261,10 @@ header = html.Header(
     style=STYLES["HEADER"],
 )
 
+
+
+
+
 # =========================================================
 #                          MAIN
 # =========================================================
@@ -259,6 +280,10 @@ main = html.Main(
     ),
     style=STYLES["MAIN"],
 )
+
+
+
+
 
 # =========================================================
 #                         FOOTER
@@ -282,6 +307,10 @@ footer = html.Footer(
     style=STYLES["FOOTER"],
 )
 
+
+
+
+
 # =========================================================
 #                      SIDEBAR CALLBACK
 # =========================================================
@@ -292,8 +321,7 @@ footer = html.Footer(
 @callback(
     Output("app-sidebar", "is_open"),
     [
-        Input("sidebar-toggle", "n_clicks"),
-        # Lắng nghe sự kiện click vào các NavLink nằm trong menu điều hướng
+        Input("sidebar-toggle", "n_clicks"),                        # Lắng nghe sự kiện click vào các NavLink nằm trong menu điều hướng
         Input({"type": "sidebar-link", "index": ALL}, "n_clicks"),
     ],
     [

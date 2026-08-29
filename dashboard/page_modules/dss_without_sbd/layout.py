@@ -1,20 +1,26 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 
-from utils.naming import naming_without_sbd
 from utils.persistent import make_persistent
+from .list_of_id import pid
 from data import BANG_CHON_MON
 
 
-def input_num(id: str, **kwargs):
-    """
-    Tạo ô nhập điểm số.
 
-    Giá trị được lưu trong session để giữ lại khi người dùng
-    chuyển đổi hoặc tương tác với trang.
+
+
+# ============================================================================
+# HELPERS
+# ============================================================================
+
+def input_num(id_name: str, **kwargs):
+    """
+    Tạo ô nhập điểm.
+
+    ID được quản lý tập trung bởi PageDirection.
     """
     return dbc.Input(
-        id=naming_without_sbd(id),
+        id=pid(id_name),
         type="number",
         min=0,
         max=10,
@@ -28,26 +34,37 @@ def input_num(id: str, **kwargs):
     )
 
 
-# ---------------------------------------------------------------------------
+
+
+
+# ============================================================================
 # LEFT PANEL
-# ---------------------------------------------------------------------------
+# ============================================================================
+
 left_layout = html.Div(
     [
+        # ====================================================================
         # BƯỚC 1: NHẬP ĐIỂM
+        # ====================================================================
         dbc.Card(
             [
                 dbc.CardHeader(
                     html.Div(
                         [
-                            html.I(className="bi bi-pencil-fill me-2"),
+                            html.I(
+                                className="bi bi-pencil-fill me-2"
+                            ),
                             "Điểm dự kiến của bạn",
                         ]
                     ),
                     className="fw-bold bg-primary text-white",
                 ),
+
                 dbc.CardBody(
                     [
+                        # ----------------------------------------------------
                         # Năm xét tuyển
+                        # ----------------------------------------------------
                         dbc.Row(
                             [
                                 dbc.Label(
@@ -56,10 +73,11 @@ left_layout = html.Div(
                                     md=6,
                                     className="small fw-bold",
                                 ),
+
                                 dbc.Col(
                                     make_persistent(
                                         dbc.Input(
-                                            id=naming_without_sbd("year"),
+                                            id=pid("year"),
                                             type="number",
                                             min=2025,
                                             step=1,
@@ -76,7 +94,9 @@ left_layout = html.Div(
 
                         html.Hr(className="my-3"),
 
+                        # ----------------------------------------------------
                         # Khu vực nhập điểm
+                        # ----------------------------------------------------
                         html.Div(
                             [
                                 dbc.Row(
@@ -95,6 +115,7 @@ left_layout = html.Div(
                                     ],
                                     className="mb-2 align-items-center",
                                 ),
+
                                 dbc.Row(
                                     [
                                         dbc.Col(
@@ -111,6 +132,7 @@ left_layout = html.Div(
                                     ],
                                     className="mb-2 align-items-center",
                                 ),
+
                                 dbc.Row(
                                     [
                                         dbc.Col(
@@ -118,13 +140,14 @@ left_layout = html.Div(
                                                 dcc.Dropdown(
                                                     options=BANG_CHON_MON,
                                                     value="Lí",
-                                                    id=naming_without_sbd("mon-1"),
+                                                    id=pid("mon-1"),
                                                     clearable=False,
                                                     className="small",
                                                 )
                                             ),
                                             width=6,
                                         ),
+
                                         dbc.Col(
                                             input_num("diem-mon-1"),
                                             width=6,
@@ -132,12 +155,13 @@ left_layout = html.Div(
                                     ],
                                     className="mb-2 align-items-center",
                                 ),
+
                                 dbc.Row(
                                     [
                                         dbc.Col(
                                             make_persistent(
                                                 dcc.Dropdown(
-                                                    id=naming_without_sbd("mon-2"),
+                                                    id=pid("mon-2"),
                                                     options=[
                                                         x
                                                         for x in BANG_CHON_MON
@@ -151,6 +175,7 @@ left_layout = html.Div(
                                             ),
                                             width=6,
                                         ),
+
                                         dbc.Col(
                                             input_num("diem-mon-2"),
                                             width=6,
@@ -164,7 +189,7 @@ left_layout = html.Div(
 
                         dbc.Button(
                             "Tính toán điểm tổ hợp",
-                            id=naming_without_sbd("build-combs"),
+                            id=pid("build-combs"),
                             color="primary",
                             disabled=True,
                             className="w-100 fw-bold shadow-sm py-2",
@@ -175,13 +200,19 @@ left_layout = html.Div(
             className="border-0 shadow-sm mb-3",
         ),
 
-        # Thông báo lỗi
+        # ====================================================================
+        # ERROR
+        # ====================================================================
+
         html.Div(
-            id=naming_without_sbd("error"),
+            id=pid("error"),
             className="mb-3",
         ),
 
+        # ====================================================================
         # BƯỚC 2: XÂY DỰNG KỊCH BẢN
+        # ====================================================================
+
         dbc.Card(
             [
                 dbc.CardHeader(
@@ -195,35 +226,44 @@ left_layout = html.Div(
                     ),
                     className="fw-bold bg-dark text-white",
                 ),
+
                 dbc.CardBody(
                     [
-                        # Chọn tổ hợp & điểm
+                        # ----------------------------------------------------
+                        # Tổ hợp & điểm
+                        # ----------------------------------------------------
+
                         html.Div(
                             [
                                 html.Label(
                                     "Tổ hợp khả dĩ",
                                     className="small fw-bold mb-1",
                                 ),
+
                                 make_persistent(
                                     dcc.Dropdown(
-                                        id=naming_without_sbd("your-comb"),
+                                        id=pid("your-comb"),
                                         options=[],
                                         value=None,
                                         clearable=False,
                                         placeholder="Chọn tổ hợp...",
-                                        disabled=False,
+                                        disabled=True,
                                         className="mb-3",
                                     )
                                 ),
+
                                 html.Div(
                                     [
                                         html.Span(
                                             "Điểm tổ hợp của bạn",
-                                            className="small text-muted d-block",
+                                            className=(
+                                                "small text-muted d-block"
+                                            ),
                                         ),
+
                                         make_persistent(
                                             dbc.Input(
-                                                id=naming_without_sbd("your-score"),
+                                                id=pid("your-score"),
                                                 value="",
                                                 readonly=True,
                                                 className=(
@@ -242,26 +282,32 @@ left_layout = html.Div(
                             ]
                         ),
 
+                        # ----------------------------------------------------
+                        # Store
+                        # ----------------------------------------------------
+
                         make_persistent(
                             dcc.Store(
-                                id=naming_without_sbd("stored-results"),
+                                id=pid("stored-results"),
                                 storage_type="memory",
                             )
                         ),
 
+                        # ----------------------------------------------------
                         # Điểm sàn
+                        # ----------------------------------------------------
+
                         html.Label(
                             "Thiết lập điểm sàn",
                             className="fw-bold small mb-2",
                         ),
+
                         dbc.Row(
                             [
                                 dbc.Col(
                                     make_persistent(
                                         dbc.Input(
-                                            id=naming_without_sbd(
-                                                "floor-score-input"
-                                            ),
+                                            id=pid("floor-score-input"),
                                             type="number",
                                             min=15,
                                             max=30,
@@ -273,10 +319,11 @@ left_layout = html.Div(
                                     width=12,
                                     md=4,
                                 ),
+
                                 dbc.Col(
                                     make_persistent(
                                         dcc.Slider(
-                                            id=naming_without_sbd("floor-score"),
+                                            id=pid("floor-score"),
                                             min=15,
                                             max=30,
                                             step=0.05,
@@ -299,38 +346,59 @@ left_layout = html.Div(
                             className="mb-4 align-items-center g-2",
                         ),
 
-                        # Danh sách tổ hợp so sánh.
-                        # Component dcc.Dropdown bên trong được tạo động
-                        # bởi callback khi đã có tổ hợp chính.
+
+
+                        # ----------------------------------------------------
+                        # Danh sách tổ hợp so sánh
+                        #
+                        # QUAN TRỌNG:
+                        # Component tồn tại ngay từ layout.
+                        # Callback chỉ cập nhật properties.
+                        # ----------------------------------------------------
+
                         html.Div(
                             [
                                 html.Label(
                                     "Tổ hợp so sánh",
                                     className="small fw-bold",
                                 ),
+
                                 html.Div(
-                                    id=naming_without_sbd(
-                                        "combs-list-container"
-                                    ),
+                                    [
+                                        make_persistent(
+                                            dcc.Dropdown(
+                                                id=pid("combs-list"),
+                                                options=[],
+                                                value=[],
+                                                multi=True,
+                                                clearable=True,
+                                                disabled=True,
+                                                placeholder=(
+                                                    "Tính tổ hợp trước..."
+                                                ),
+                                            )
+                                        )
+                                    ],
                                     className=(
                                         "mb-4 p-2 bg-white rounded border "
                                         "min-vh-10"
                                     ),
+                                    id=pid("combs-list-container"),
                                 ),
                             ]
                         ),
 
                         dbc.Button(
                             "Chạy kịch bản phân tích",
-                            id=naming_without_sbd("run-scenario"),
+                            id=pid("run-scenario"),
                             color="success",
-                            # disabled=True,
+                            disabled=True,
                             className="w-100 py-2 fw-bold shadow",
                         ),
                     ]
                 ),
             ],
-            id=naming_without_sbd("scenario"),
+            id=pid("scenario"),
             style={"display": "none"},
             className="border-0 shadow-sm",
         ),
@@ -340,9 +408,13 @@ left_layout = html.Div(
 )
 
 
-# ---------------------------------------------------------------------------
+
+
+
+# ============================================================================
 # PAGE LAYOUT
-# ---------------------------------------------------------------------------
+# ============================================================================
+
 layout = dbc.Container(
     [
         dbc.Row(
@@ -353,12 +425,13 @@ layout = dbc.Container(
                     md=4,
                     className="px-1",
                 ),
+
                 dbc.Col(
                     dcc.Loading(
-                        id=naming_without_sbd("loading-main"),
+                        id=pid("loading-main"),
                         type="circle",
                         children=html.Div(
-                            id=naming_without_sbd("right-content"),
+                            id=pid("right-content"),
                             className="h-100",
                         ),
                     ),

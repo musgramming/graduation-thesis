@@ -4,9 +4,9 @@ import dash_bootstrap_components as dbc
 
 from data import TO_HOP
 from utils.build_script import display_graph_and_table
-from utils.naming import naming_without_sbd
 from utils.persistent import make_persistent
 
+from .list_of_id import pid
 
 
 
@@ -21,12 +21,12 @@ from utils.persistent import make_persistent
 # nên không cần request lên Python server.
 clientside_callback(
     ClientsideFunction("withoutSbd", "sync_subjects"),
-    Output(naming_without_sbd("mon-1"), "options"),
-    Output(naming_without_sbd("mon-1"), "value"),
-    Output(naming_without_sbd("mon-2"), "options"),
-    Output(naming_without_sbd("mon-2"), "value"),
-    Input(naming_without_sbd("mon-1"), "value"),
-    Input(naming_without_sbd("mon-2"), "value")
+    Output(pid("mon-1"), "options"),
+    Output(pid("mon-1"), "value"),
+    Output(pid("mon-2"), "options"),
+    Output(pid("mon-2"), "value"),
+    Input(pid("mon-1"), "value"),
+    Input(pid("mon-2"), "value")
 )
 
 
@@ -36,11 +36,11 @@ clientside_callback(
 # 2. Kiểm tra dữ liệu điểm để bật/tắt nút "Tính toán điểm tổ hợp".
 clientside_callback(
     ClientsideFunction("withoutSbd", "validate_scores"),
-    Output(naming_without_sbd("build-combs"), "disabled"),
-    Input(naming_without_sbd("math"), "value"),
-    Input(naming_without_sbd("literature"), "value"),
-    Input(naming_without_sbd("diem-mon-1"), "value"),
-    Input(naming_without_sbd("diem-mon-2"), "value"),
+    Output(pid("build-combs"), "disabled"),
+    Input(pid("math"), "value"),
+    Input(pid("literature"), "value"),
+    Input(pid("diem-mon-1"), "value"),
+    Input(pid("diem-mon-2"), "value"),
 )
 
 
@@ -52,9 +52,9 @@ clientside_callback(
 # Component "combs-list" được tạo động bởi callback render_scenario_dropdown.
 clientside_callback(
     ClientsideFunction("withoutSbd", "protect_original_comb"),
-    Output(naming_without_sbd("combs-list"), "value"),
-    Input(naming_without_sbd("combs-list"), "value"),
-    State(naming_without_sbd("your-comb"), "value"),
+    Output(pid("combs-list"), "value"),
+    Input(pid("combs-list"), "value"),
+    State(pid("your-comb"), "value"),
     prevent_initial_call=True,
 )
 
@@ -70,13 +70,13 @@ clientside_callback(
 # Đây hoàn toàn là UI state, nên chạy clientside.
 clientside_callback(
     ClientsideFunction("withoutSbd", "sync_floor_score"),
-    Output(naming_without_sbd("floor-score"), "max"),
-    Output(naming_without_sbd("floor-score"), "value"),
-    Output(naming_without_sbd("floor-score-input"), "max"),
-    Output(naming_without_sbd("floor-score-input"), "value"),
-    Input(naming_without_sbd("your-score"), "value"),
-    Input(naming_without_sbd("floor-score"), "value"),
-    Input(naming_without_sbd("floor-score-input"), "value"),
+    Output(pid("floor-score"), "max"),
+    Output(pid("floor-score"), "value"),
+    Output(pid("floor-score-input"), "max"),
+    Output(pid("floor-score-input"), "value"),
+    Input(pid("your-score"), "value"),
+    Input(pid("floor-score"), "value"),
+    Input(pid("floor-score-input"), "value"),
 )
 
 
@@ -88,18 +88,18 @@ clientside_callback(
 # ============================================================================
 
 @callback(
-    Output(naming_without_sbd("scenario"), "style"),
-    Output(naming_without_sbd("error"), "children"),
-    Output(naming_without_sbd("your-comb"), "options"),
-    Output(naming_without_sbd("your-comb"), "value"),
-    Output(naming_without_sbd("stored-results"), "data"),
-    Input(naming_without_sbd("build-combs"), "n_clicks"),
-    State(naming_without_sbd("math"), "value"),
-    State(naming_without_sbd("literature"), "value"),
-    State(naming_without_sbd("mon-1"), "value"),
-    State(naming_without_sbd("diem-mon-1"), "value"),
-    State(naming_without_sbd("mon-2"), "value"),
-    State(naming_without_sbd("diem-mon-2"), "value"),
+    Output(pid("scenario"), "style"),
+    Output(pid("error"), "children"),
+    Output(pid("your-comb"), "options"),
+    Output(pid("your-comb"), "value"),
+    Output(pid("stored-results"), "data"),
+    Input(pid("build-combs"), "n_clicks"),
+    State(pid("math"), "value"),
+    State(pid("literature"), "value"),
+    State(pid("mon-1"), "value"),
+    State(pid("diem-mon-1"), "value"),
+    State(pid("mon-2"), "value"),
+    State(pid("diem-mon-2"), "value"),
     prevent_initial_call=True,
 )
 def calculate_and_store(
@@ -253,10 +253,10 @@ def calculate_and_store(
 
 
 @callback(
-    Output(naming_without_sbd("your-score"), "value"),
-    Output(naming_without_sbd("combs-list-container"), "children"),
-    Input(naming_without_sbd("your-comb"), "value"),
-    State(naming_without_sbd("stored-results"), "data"),
+    Output(pid("your-score"), "value"),
+    Output(pid("combs-list-container"), "children"),
+    Input(pid("your-comb"), "value"),
+    State(pid("stored-results"), "data"),
     prevent_initial_call=True,
 )
 def update_combination_details(selected_comb, stored_data):
@@ -313,7 +313,7 @@ def update_combination_details(selected_comb, stored_data):
 
     scenario_dropdown = make_persistent(
         dcc.Dropdown(
-            id=naming_without_sbd("combs-list"),
+            id=pid("combs-list"),
             options=options,
             value=[selected_comb],
             multi=True,
@@ -328,13 +328,13 @@ def update_combination_details(selected_comb, stored_data):
 
 
 @callback(
-    Output(naming_without_sbd("right-content"), "children"),
-    Input(naming_without_sbd("run-scenario"), "n_clicks"),
-    State(naming_without_sbd("your-score"), "value"),
-    State(naming_without_sbd("year"), "value"),
-    State(naming_without_sbd("floor-score"), "value"),
-    State(naming_without_sbd("combs-list"), "value"),
-    State(naming_without_sbd("stored-results"), "data"),
+    Output(pid("right-content"), "children"),
+    Input(pid("run-scenario"), "n_clicks"),
+    State(pid("your-score"), "value"),
+    State(pid("year"), "value"),
+    State(pid("floor-score"), "value"),
+    State(pid("combs-list"), "value"),
+    State(pid("stored-results"), "data"),
     prevent_initial_call=True,
 )
 def display_analysis_without_sbd(

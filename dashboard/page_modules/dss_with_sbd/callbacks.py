@@ -9,22 +9,22 @@ from data import (
     COMB_OPTIONS
 )
 
-from utils.naming import naming_with_sbd
 from utils.build_script import display_graph_and_table
+from .list_of_id import pid
 
 
 
 
 
 @callback(
-    [
-        Output(naming_with_sbd("sbd"), "invalid"),
-        Output(naming_with_sbd("sbd-feedback"), "children"),
-        Output(naming_with_sbd("search-info"), "disabled")
+    [ 
+        Output(pid("sbd"), "invalid"), 
+        Output(pid("sbd-feedback"), "children"), 
+        Output(pid("search-info"), "disabled") 
     ], 
-    [
-        Input(naming_with_sbd("year"), "value"),
-        Input(naming_with_sbd("sbd"), "value")
+    [ 
+        Input(pid("year"), "value"), 
+        Input(pid("sbd"), "value")
     ],
     prevent_initial_call=True,
 )
@@ -111,18 +111,18 @@ def validate_sbd_and_toggle_button(year, sbd):
 
 @callback(
     [
-        Output(naming_with_sbd("comb"), "options"),
-        Output(naming_with_sbd("comb"), "value"),
-        Output(naming_with_sbd("status-output-2"), "children"),
-        Output(naming_with_sbd("score"), "children")
+        Output(pid("comb"), "options"),
+        Output(pid("comb"), "value"),
+        Output(pid("status-output-2"), "children"),
+        Output(pid("score"), "children")
     ],
     [
-        Input(naming_with_sbd("search-info"), "n_clicks"),
-        Input(naming_with_sbd("comb"), "value")
+        Input(pid("search-info"), "n_clicks"),
+        Input(pid("comb"), "value")
     ], 
     [
-        State(naming_with_sbd("sbd"), "value"),
-        State(naming_with_sbd("year"), "value")
+        State(pid("sbd"), "value"),
+        State(pid("year"), "value")
     ],
     prevent_initial_call=True,
 )
@@ -185,7 +185,7 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
     # ---------------------------------------------------------------
     # 1. Bấm Tra cứu: lấy toàn bộ tổ hợp hợp lệ của SBD.
     # ---------------------------------------------------------------
-    if triggered == naming_with_sbd("search-info"):
+    if triggered == pid("search-info"):
         if not search_clicks:
             return [], None, "", "---"
 
@@ -274,7 +274,7 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
     # ---------------------------------------------------------------
     # 2. Đổi tổ hợp: chỉ lấy lại điểm.
     # ---------------------------------------------------------------
-    if triggered == naming_with_sbd("comb"):
+    if triggered == pid("comb"):
         if not selected_comb:
             return no_update, None, no_update, "---"
 
@@ -313,11 +313,11 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
 
 @callback(
     [
-        Output(naming_with_sbd("combs-script"), "options"),
-        Output(naming_with_sbd("combs-script"), "value"),
-        Output(naming_with_sbd("combs-script"), "disabled"),
+        Output(pid("combs-script"), "options"),
+        Output(pid("combs-script"), "value"),
+        Output(pid("combs-script"), "disabled"),
     ],
-    Input(naming_with_sbd("comb"), "value"),
+    Input(pid("comb"), "value"),
     prevent_initial_call=True,
 )
 def update_comparison_combinations(original_comb):
@@ -368,15 +368,15 @@ def update_comparison_combinations(original_comb):
 clientside_callback(
     ClientsideFunction("withSBD", "configure_floor_score"),
     [
-        Output(naming_with_sbd("floor-score-slider"), "max"),
-        Output(naming_with_sbd("floor-score-slider"), "marks"),
-        Output(naming_with_sbd("floor-score-slider"), "value"),
-        Output(naming_with_sbd("floor-score-slider"), "disabled"),
+        Output(pid("floor-score-slider"), "max"),
+        Output(pid("floor-score-slider"), "marks"),
+        Output(pid("floor-score-slider"), "value"),
+        Output(pid("floor-score-slider"), "disabled"),
 
-        Output(naming_with_sbd("floor-score-warning"), "children"),
-        Output(naming_with_sbd("floor-score-warning"), "is_open"),
+        Output(pid("floor-score-warning"), "children"),
+        Output(pid("floor-score-warning"), "is_open"),
     ],
-    Input(naming_with_sbd("score"), "children"),
+    Input(pid("score"), "children"),
     prevent_initial_call=True,
 )
 
@@ -385,10 +385,10 @@ clientside_callback(
 
 clientside_callback(
     ClientsideFunction("withSBD", "input_to_slider"),
-    Output(naming_with_sbd("floor-score-slider"), "value", allow_duplicate=True),
-    Input(naming_with_sbd("floor-score-input"), "value"),
-    State(naming_with_sbd("floor-score-slider"), "min"),
-    State(naming_with_sbd("floor-score-slider"), "max"),
+    Output(pid("floor-score-slider"), "value", allow_duplicate=True),
+    Input(pid("floor-score-input"), "value"),
+    State(pid("floor-score-slider"), "min"),
+    State(pid("floor-score-slider"), "max"),
     prevent_initial_call=True,
 )
 
@@ -398,8 +398,8 @@ clientside_callback(
 
 clientside_callback(
     ClientsideFunction("withSBD", "slider_to_input"),
-    Output(naming_with_sbd("floor-score-input"), "value"),
-    Input(naming_with_sbd("floor-score-slider"), "value"),
+    Output(pid("floor-score-input"), "value"),
+    Input(pid("floor-score-slider"), "value"),
     prevent_initial_call=True,
 )
 
@@ -412,11 +412,11 @@ clientside_callback(
 # ---------------------------------------------------------------------------
 clientside_callback(
     ClientsideFunction("withSBD", "toggle_analysis_button"),
-    Output(naming_with_sbd("analysis"),"disabled"),
+    Output(pid("analysis"),"disabled"),
     [
-        Input(naming_with_sbd("score"), "children"),
-        Input(naming_with_sbd("combs-script"), "value"),
-        Input(naming_with_sbd("floor-score-slider"), "disabled"),
+        Input(pid("score"), "children"),
+        Input(pid("combs-script"), "value"),
+        Input(pid("floor-score-slider"), "disabled"),
     ],
     prevent_initial_call=True,
 )
@@ -429,13 +429,13 @@ clientside_callback(
 # SERVER-SIDE: PHÂN TÍCH
 # ---------------------------------------------------------------------------
 @callback(
-    Output(naming_with_sbd("full-div"), "children"),
-    Input(naming_with_sbd("analysis"), "n_clicks"),
-    State(naming_with_sbd("score"), "children"),
-    State(naming_with_sbd("year"), "value"),
-    State(naming_with_sbd("floor-score-slider"), "value"),
-    State(naming_with_sbd("combs-script"), "value"),
-    State(naming_with_sbd("mode-selection"), "value"),
+    Output(pid("full-div"), "children"),
+    Input(pid("analysis"), "n_clicks"),
+    State(pid("score"), "children"),
+    State(pid("year"), "value"),
+    State(pid("floor-score-slider"), "value"),
+    State(pid("combs-script"), "value"),
+    State(pid("mode-selection"), "value"),
     prevent_initial_call=True,
 )
 def analysis_callback(n, score_text, year, floor_score, combs, mode):
