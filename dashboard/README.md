@@ -1,6 +1,6 @@
-# THPTQG 2025 — Data Analytics & Decision Support Dashboard
+# Kỳ thi Tốt nghiệp THPT — Data Analytics & Decision Support Dashboard
 
-Dashboard hỗ trợ phân tích dữ liệu điểm thi Tốt nghiệp THPT 2025 và xây dựng các kịch bản xét tuyển.
+Dashboard hỗ trợ phân tích dữ liệu điểm thi Tốt nghiệp THPT và xây dựng các kịch bản xét tuyển.
 
 ## Chức năng chính
 

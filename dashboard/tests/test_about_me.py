@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = r"http://127.0.0.1:8050/about_me"
+BASE_URL = r"http://127.0.0.1:8050/about-me"
 
 response = requests.get(BASE_URL)
 

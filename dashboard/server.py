@@ -5,12 +5,13 @@ from dash import Dash
 from flask_cors import CORS
 
 from main_layout import app_layout
+from api.access import api_bp as access_bp
 from api.not_access import api_bp as not_access_bp
 
 
 server = Flask(__name__)
 
-
+server.register_blueprint(access_bp)
 server.register_blueprint(not_access_bp)
 
 
@@ -58,5 +59,5 @@ if __name__ == "__main__":
     app.run(
         host=host,
         port=port,
-        debug=debug if debug is None else True,
+        debug=debug,
     )
