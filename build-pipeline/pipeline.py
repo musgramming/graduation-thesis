@@ -6,10 +6,16 @@ from collections import defaultdict
 from pathlib import Path
 
 
-
 # Giới hạn số thread trước khi import Polars/Arrow.
-os.environ["POLARS_MAX_THREADS"] = "1"
-os.environ["ARROW_NUM_THREADS"] = "1"
+POLARS_MAX_THREADS = "1"
+ARROW_NUM_THREADS = "1"
+
+os.environ["POLARS_MAX_THREADS"] = POLARS_MAX_THREADS
+os.environ["ARROW_NUM_THREADS"] = ARROW_NUM_THREADS
+
+
+
+
 
 import pandas as pd
 import polars as pl
@@ -33,7 +39,12 @@ from logging_utils import (
 
 
 
-def read_dataframe(file_path: str, nrows : int | None = None) -> pd.DataFrame | dict[str, pd.DataFrame]:
+
+def read_dataframe(
+    file_path: str, 
+    nrows : int | None = None
+) -> pd.DataFrame | dict[str, pd.DataFrame]:
+
     ext = Path(file_path).suffix.lower()
 
     if ext == ".xlsx":
@@ -63,6 +74,7 @@ def read_dataframe(file_path: str, nrows : int | None = None) -> pd.DataFrame | 
         raise ValueError(
             f"Không hỗ trợ định dạng {ext}. Chỉ hỗ trợ .csv và .xlsx"
         )
+
 
 
 
@@ -389,7 +401,7 @@ def tien_xu_ly_bang_diem_phu(file_phu: str = None):
 
 
 
-def full_processing(year: int):
+def full_processing(year: int, level : int = 21):
 
     pipeline_start = time.perf_counter()
 
@@ -432,10 +444,10 @@ def full_processing(year: int):
         year,
     )
 
-    DF_CHINH.collect().write_parquet(
+    DF_CHINH.sort(["SOBAODANH"]).collect().write_parquet(
         f"./output/bang_diem/bang_diem-{year}.parquet",
         compression="zstd",
-        compression_level=21,
+        compression_level=level,
         use_pyarrow=True,
     )
 
@@ -537,11 +549,12 @@ def full_processing(year: int):
             "Hợp lệ",
             "Chương trình mới",
         ])
+        .sort(["SOBAODANH", "Tổ hợp"])
         .collect()
         .write_parquet(
             f"./output/bang_diem_to_hop/bang_diem_to_hop-{year}.parquet",
             compression="zstd",
-            compression_level=21,
+            compression_level=level,
             use_pyarrow=True,
         )
     )
@@ -563,6 +576,9 @@ def full_processing(year: int):
     return 0
 
 
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -571,10 +587,24 @@ if __name__ == "__main__":
         "--year",
         type=int,
         required=True,
+        help = "Năm cần xử lý"
+    )
+
+    parser.add_argument(
+        "--level", 
+        type = int, 
+        required = False,
+        default = 21, 
+        help = "Level giải nén của ZSTD (mặc định là 21)"
     )
 
     args = parser.parse_args()
+    year = args.year
+    level = args.level
 
     raise SystemExit(
-        full_processing(args.year)
+        full_processing(
+            year = year, 
+            level = level
+        )
     )

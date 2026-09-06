@@ -525,6 +525,17 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 maxScore,
                 nextInput
             ];
-        }
+        }, 
+
+
+        
+        /**
+         * Bật/tắt nút Chạy kịch bản phân tích dựa vào điểm và tổ hợp so sánh.
+         */
+        toggle_run_button: function (scoreText, combs) {
+            const validScore = typeof scoreText === "string" && scoreText.trim() !== "";
+            const validCombs = Array.isArray(combs) && combs.length > 0;
+            return !(validScore && validCombs);
+        },
     }
 });

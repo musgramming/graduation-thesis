@@ -1,8 +1,12 @@
+from pathlib import Path
 from flask import Blueprint, Response
 
-robots = open("robots.txt", mode="r", encoding = "utf-8").read()
+current_dir = Path(__file__).resolve().parent
+robots_path = current_dir / "about_me.txt"
 
-api_bp = Blueprint("not_accessing_api", __name__)
+robots = robots_path.read_text(encoding="utf-8")
+
+api_bp = Blueprint("accessing_api", __name__)
 
 
 @api_bp.get("/api")

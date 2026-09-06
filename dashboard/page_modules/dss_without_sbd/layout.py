@@ -247,7 +247,6 @@ left_layout = html.Div(
                                         value=None,
                                         clearable=False,
                                         placeholder="Chọn tổ hợp...",
-                                        disabled=True,
                                         className="mb-3",
                                     )
                                 ),

@@ -2,6 +2,9 @@ import logging
 from pathlib import Path
 
 
+
+
+
 # ============================================================
 # Pipeline utilities
 # ============================================================
@@ -16,6 +19,9 @@ def format_duration(seconds: float) -> str:
     minutes, seconds = divmod(remainder, 60)
 
     return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+
+
 
 
 def setup_logging(year: int) -> logging.Logger:
@@ -82,6 +88,9 @@ def setup_logging(year: int) -> logging.Logger:
     return logger
 
 
+
+
+
 def log_step(
     logger: logging.Logger,
     step: int,
@@ -103,6 +112,9 @@ def log_step(
         )
 
 
+
+
+
 def log_success(
     logger: logging.Logger,
     elapsed: float,
@@ -116,6 +128,9 @@ def log_success(
         f"{' ' * 25}"
         f"{format_duration(elapsed)}"
     )
+
+
+
 
 
 def log_pipeline_success(

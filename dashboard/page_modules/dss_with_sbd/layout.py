@@ -110,12 +110,16 @@ left_layout = html.Div([
                     ),
 
                     dbc.Col([
-                        make_persistent(
-                            dcc.Dropdown(
-                                id=pid("comb"),
-                                placeholder="Chọn tổ hợp...",
-                                clearable=False
-                            )
+                        html.Div(
+                            make_persistent(
+                                dcc.Dropdown(
+                                    id=pid("comb"),
+                                    placeholder="Chọn tổ hợp...",
+                                    clearable=False,
+                                    className="comb-dropdown"
+                                )
+                            ),
+                            className="comb-dropdown-wrapper",
                         ),
 
                         html.Div(
@@ -123,6 +127,7 @@ left_layout = html.Div([
                             className="small mt-1"
                         )
                     ], width=12, md=8),
+
                 ], className="mb-3"),
 
                 dbc.Row([

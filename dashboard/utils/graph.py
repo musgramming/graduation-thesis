@@ -1,44 +1,57 @@
 import plotly.graph_objects as go
 
-def build_strict_graph(fig: go.Figure = None) -> go.Figure:
-    if fig is None:
-        fig = go.Figure()
-        is_empty = True
-    else:
-        is_empty = False
+def build_strict_graph(fig: go.Figure) -> go.Figure:
+    """
+    Chuẩn hóa giao diện cho biểu đồ Plotly theo phong cách tối giản, 
+    chuyên nghiệp và đồng bộ trên toàn hệ thống Dashboard.
 
+    Args:
+        fig (go.Figure): Đối tượng biểu đồ Plotly cần định dạng.
+
+    Returns:
+        go.Figure: Biểu đồ sau khi được cập nhật layout.
+    """
     fig.update_layout(
-        xaxis=dict(
-            fixedrange=False, 
-            showgrid=True, 
-            gridcolor='#f0f0f0',
-            zeroline=False, 
-            visible=not is_empty,
-            tickfont=dict(size=10)
-        ),
-        yaxis=dict(
-            fixedrange=True, 
-            showgrid=True,
-            gridcolor='#f0f0f0',
-            zeroline=False, 
-            visible=not is_empty,
-            tickfont=dict(size=10)
-        ),
-        hovermode='x unified',
-        dragmode='zoom', 
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(
-            l=5, 
-            r=5, 
-            t=40, 
-            b=5
-        ),
+        template="plotly_white",
+        margin=dict(l=40, r=20, t=30, b=40),
         font=dict(
-            family="Arial, sans-serif", 
-            size=12
+            family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+            size=12,
+            color="#212529"
         ),
-        autosize=True
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=12,
+            font_family="sans-serif"
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    
+    # Chuẩn hóa đường lưới (grid) nhạt hơn để không rối mắt
+    fig.update_xaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="#f1f3f5",
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor="#dee2e6"
+    )
+    
+    fig.update_yaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="#f1f3f5",
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor="#dee2e6"
     )
 
     return fig

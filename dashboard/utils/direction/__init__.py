@@ -7,7 +7,7 @@ from .direction_secure import PageDirection as PageDirectionSecure
 load_dotenv()
 
 
-MODE = os.getenv("MODE")
+MODE = os.getenv("MODE", "development")
 
 # That needs importing.
 if MODE == "production":

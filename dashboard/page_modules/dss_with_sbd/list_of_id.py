@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from utils.direction import PageDirection
 
 
@@ -13,26 +15,15 @@ page_direction = direction.assign_page("sbd")
 # ID REGISTRY
 # ---------------------------------------------------------------------------
 
-ids = [
-    "sbd",
-    "sbd-feedback",
-    "year",
-    "search-info",
-    "comb",
-    "status-output-2",
-    "score",
-    "combs-script",
-    "floor-score-input",
-    "floor-score-slider",
-    "floor-score-warning",
-    "mode-selection",
-    "analysis",
-    "loading-analysis",
-    "full-div",
-]
+current_dir = Path(__file__).resolve().parent
+json_path = current_dir / "ids.json"
 
-for item_id in ids:
-    page_direction.assign_id(item_id)
+with open(json_path, "r", encoding="utf-8") as f:
+    ids = json.load(f)
+
+for _id in ids:
+    page_direction.assign_id(_id)
+
 
 
 def pid(id_name: str):

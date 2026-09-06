@@ -17,6 +17,9 @@ PIPELINE_FILE = Path("pipeline.py")
 OUTPUT_DIR = Path("output")
 
 
+
+
+
 # ============================================================
 # Argument
 # ============================================================
@@ -34,10 +37,26 @@ def parse_arguments() -> argparse.Namespace:
         type=int,
         nargs="+",
         required=True,
-        help="Danh sách các năm dữ liệu cần xử lý (ví dụ: -y 2024 2025 hoặc -y 2025).",
+        help=(
+            "Danh sách các năm dữ liệu cần xử lý "
+            "(ví dụ: -y 2025 2026 hoặc -y 2025)."
+        ),
+    )
+
+    parser.add_argument(
+        "--level",
+        type=int,
+        default=21,
+        help=(
+            "Mức compression level của Zstandard khi ghi Parquet "
+            "(mặc định: 21)."
+        ),
     )
 
     return parser.parse_args()
+
+
+
 
 
 # ============================================================
@@ -48,6 +67,7 @@ def validate_years(years: list[int]) -> bool:
     """Kiểm tra danh sách năm dữ liệu."""
 
     valid = True
+
     for year in years:
         if year < 2025:
             print(
@@ -57,6 +77,25 @@ def validate_years(years: list[int]) -> bool:
             valid = False
 
     return valid
+
+
+
+
+
+def validate_level(level: int) -> bool:
+    """Kiểm tra compression level."""
+
+    if level < 1:
+        print(
+            f"ERROR: Compression level phải lớn hơn hoặc bằng 1: {level}",
+            file=sys.stderr,
+        )
+        return False
+
+    return True
+
+
+
 
 
 # ============================================================
@@ -76,6 +115,9 @@ def prepare_directories() -> None:
             parents=True,
             exist_ok=True,
         )
+
+
+
 
 
 # ============================================================
@@ -102,14 +144,19 @@ def create_virtual_environment() -> None:
     )
 
 
+
+
+
 def get_python_executable() -> Path:
     """Lấy Python executable bên trong virtual environment."""
-    
-    # Lưu ý: Nếu chạy trên Linux/macOS, đường dẫn là VENV_DIR / "bin" / "python"
-    # Ở đây giữ nguyên "Scripts" cho Windows theo code gốc của bạn.
+
     if sys.platform == "win32":
         return VENV_DIR / "Scripts" / "python.exe"
+
     return VENV_DIR / "bin" / "python"
+
+
+
 
 
 # ============================================================
@@ -148,6 +195,9 @@ def install_requirements(
     )
 
 
+
+
+
 # ============================================================
 # Pipeline
 # ============================================================
@@ -155,10 +205,14 @@ def install_requirements(
 def run_pipeline(
     python_executable: Path,
     year: int,
+    level: int,
 ) -> int:
-    """Chạy pipeline.py cho một năm cụ thể và trả về exit code."""
+    """Chạy pipeline.py cho một năm cụ thể."""
 
-    print(f"\nĐang chạy pipeline cho năm {year}...\n")
+    print(
+        f"\nĐang chạy pipeline cho năm {year} "
+        f"với Zstandard compression level {level}...\n"
+    )
 
     result = subprocess.run(
         [
@@ -166,11 +220,16 @@ def run_pipeline(
             str(PIPELINE_FILE),
             "--year",
             str(year),
+            "--level",
+            str(level),
         ],
         check=False,
     )
 
     return result.returncode
+
+
+
 
 
 # ============================================================
@@ -184,13 +243,18 @@ def main() -> int:
     # --------------------------------------------------------
 
     args = parse_arguments()
+
     years = args.years
+    level = args.level
 
     # --------------------------------------------------------
-    # B2. Validate years
+    # B2. Validate arguments
     # --------------------------------------------------------
 
     if not validate_years(years):
+        return 1
+
+    if not validate_level(level):
         return 1
 
     # --------------------------------------------------------
@@ -202,7 +266,7 @@ def main() -> int:
     print("Đã chuẩn bị thư mục output.")
 
     # --------------------------------------------------------
-    # B4 → B6. Environment + pipeline (lặp qua các năm)
+    # B4 → B6. Environment + pipeline
     # --------------------------------------------------------
 
     try:
@@ -216,10 +280,17 @@ def main() -> int:
 
         # Chạy lần lượt từng năm trong danh sách
         for year in years:
-            exit_code = run_pipeline(python_executable, year)
+
+            exit_code = run_pipeline(
+                python_executable,
+                year,
+                level,
+            )
+
             if exit_code != 0:
                 print(
-                    f"\nERROR: Pipeline thất bại ở năm {year} với exit code {exit_code}.",
+                    f"\nERROR: Pipeline thất bại ở năm "
+                    f"{year} với exit code {exit_code}.",
                     file=sys.stderr,
                 )
                 return exit_code
@@ -251,6 +322,9 @@ def main() -> int:
                 VENV_DIR,
                 ignore_errors=True,
             )
+
+
+
 
 
 # ============================================================

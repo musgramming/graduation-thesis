@@ -9,8 +9,11 @@ DATA_DIR = Path(__file__).parent
 # Thư mục chứa các bảng tra cứu/quy đổi
 LOOKUP_DIR = DATA_DIR / "lookup_tables"
 
+# Thư mục chứa bảng điểm thô
+BASE_RAW_SCORE_DIR = DATA_DIR / "raw_scores"
+
 # Thư mục chứa bảng điểm tổ hợp
-BASE_DIR = DATA_DIR / "combs_scores"
+BASE_COMB_SCORE_DIR = DATA_DIR / "combs_scores"
 
 # Sửa lại đường dẫn trỏ đúng vào lookup_tables/
 TO_HOP_PATH = LOOKUP_DIR / "bang_to_hop_mon.csv"
@@ -35,9 +38,14 @@ TO_HOP = pl.scan_csv(TO_HOP_PATH).with_columns(
     )
 
 
+BANG_DIEM = {
+    int(f.stem.split('-')[-1]): pl.scan_parquet(f)
+    for f in BASE_RAW_SCORE_DIR.glob("bang_diem-*.parquet")
+}
+
 BANG_DIEM_TO_HOP = {
-    int(f.stem.split('_')[-1]): pl.scan_parquet(f) 
-    for f in BASE_DIR.glob("bang_diem_to_hop_*.parquet")
+    int(f.stem.split('-')[-1]): pl.scan_parquet(f)
+    for f in BASE_COMB_SCORE_DIR.glob("bang_diem_to_hop-*.parquet")
 }
 
 

@@ -1,6 +1,10 @@
+from pathlib import Path
 from flask import Blueprint, Response
 
-about_me = open("./api/about_me.txt", mode="r", encoding = "utf-8").read()
+current_dir = Path(__file__).resolve().parent
+about_me_path = current_dir / "about_me.txt"
+
+about_me = about_me_path.read_text(encoding="utf-8")
 
 api_bp = Blueprint("accessing_api", __name__)
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+import json
 from utils.direction import PageDirection
 
 
@@ -13,28 +15,13 @@ page_direction = direction.assign_page("without_sbd")
 # ID REGISTRY
 # ============================================================================
 
-for _id in [
-    "year",
-    "math",
-    "literature",
-    "mon-1",
-    "mon-2",
-    "diem-mon-1",
-    "diem-mon-2",
-    "build-combs",
-    "error",
-    "scenario",
-    "your-comb",
-    "your-score",
-    "stored-results",
-    "floor-score-input",
-    "floor-score",
-    "combs-list-container",
-    "combs-list",
-    "run-scenario",
-    "loading-main",
-    "right-content",
-]:
+current_dir = Path(__file__).resolve().parent
+json_path = current_dir / "ids.json"
+
+with open(json_path, "r", encoding="utf-8") as f:
+    ids = json.load(f)
+
+for _id in ids:
     page_direction.assign_id(_id)
 
 

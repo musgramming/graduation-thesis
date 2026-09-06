@@ -83,6 +83,17 @@ clientside_callback(
 
 
 
+clientside_callback(
+    ClientsideFunction("withoutSbd", "toggle_run_button"),
+    Output(pid("run-scenario"), "disabled"),
+    Input(pid("your-score"), "value"),
+    Input(pid("combs-list"), "value"),
+)
+
+
+
+
+
 # ============================================================================
 # SERVER-SIDE CALLBACKS
 # ============================================================================
@@ -93,6 +104,7 @@ clientside_callback(
     Output(pid("your-comb"), "options"),
     Output(pid("your-comb"), "value"),
     Output(pid("stored-results"), "data"),
+    Output(pid("your-comb"), "disabled"),
     Input(pid("build-combs"), "n_clicks"),
     State(pid("math"), "value"),
     State(pid("literature"), "value"),
@@ -161,7 +173,7 @@ def calculate_and_store(
             )
     """
     if not n_clicks:
-        return {"display": "none"}, None, [], None, None
+        return {"display": "none"}, None, [], None, None, True
 
     user_map = {
         "Toán": float(toan or 0),
@@ -180,6 +192,7 @@ def calculate_and_store(
             [],
             None,
             None,
+            True
         )
 
     list_mon = list(user_map.keys())
@@ -216,6 +229,7 @@ def calculate_and_store(
             [],
             None,
             None,
+            True
         )
 
     if results.height == 0:
@@ -228,6 +242,7 @@ def calculate_and_store(
             [],
             None,
             None,
+            True
         )
 
     data_to_store = results.to_dicts()
@@ -246,6 +261,7 @@ def calculate_and_store(
         options,
         options[0]["value"],
         data_to_store,
+        False
     )
 
 
