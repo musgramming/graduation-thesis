@@ -1,5 +1,5 @@
 import dash
-from dash import html, page_container, callback, Input, Output, State, MATCH, ALL
+from dash import html, page_container, callback, Input, Output, State, ALL
 import dash_bootstrap_components as dbc
 
 
@@ -7,18 +7,7 @@ import dash_bootstrap_components as dbc
 
 
 # =========================================================
-#                       CONSTANTS
-# =========================================================
-
-APP_TITLE = "Phân tích Dữ liệu thi Tốt nghiệp THPT"
-APP_BADGE = "Đồ án tốt nghiệp"
-
-
-
-
-
-# =========================================================
-#                       STYLES
+#                    CONSTANTS & STYLES
 # =========================================================
 
 STYLES = {
@@ -51,13 +40,6 @@ STYLES = {
         "borderTop": "1px solid #343a40",
         "padding": "0.9rem 0",
     },
-    "MENU_BUTTON": {
-        "width": "42px",
-        "height": "42px",
-    },
-    "SIDEBAR": {
-        "width": "280px",
-    },
 }
 
 
@@ -65,27 +47,21 @@ STYLES = {
 
 
 # =========================================================
-#                    NAVIGATION HELPERS
+#                  NAVIGATION BUILDER (Single Source of Truth)
 # =========================================================
 
-def get_navigation():
+def build_sidebar_nav():
     """
-    Tạo danh sách điều hướng từ Dash Page Registry.
+    Hàm duy nhất chịu trách nhiệm dựng danh sách điều hướng từ Dash Page Registry.
+    Đảm bảo tính nhất quán về Pattern-Matching ID cho callback đóng mở sidebar.
     """
-    # Lấy danh sách các trang đã được đăng ký
     pages = sorted(
         dash.page_registry.values(),
         key=lambda page: page.get("order", 999),
     )
 
     navigation = []
-
-    # Nếu chưa có trang nào được đăng ký (phòng hờ lỗi load), hiển thị thông báo nhẹ
-    if not pages:
-        return html.Div("Chưa có trang nào được cấu hình.", className="text-muted small p-2")
-
     for page in pages:
-        # Bỏ qua trang not_found nếu không muốn hiện trên menu (tùy chọn)
         if page.get("path") == "/not-found":
             continue
             
@@ -105,33 +81,37 @@ def get_navigation():
             )
         )
 
-    return navigation
+    if not navigation:
+        return html.Div("Chưa có trang nào được cấu hình.", className="text-muted small p-2")
+
+    return dbc.Nav(
+        navigation,
+        vertical=True,
+        pills=True,
+    )
 
 
 
 
 
 # =========================================================
-#                       SIDEBAR
+#                         SIDEBAR
 # =========================================================
 
 sidebar = dbc.Offcanvas(
     [
         html.Div(
             [
-                html.H5(
-                    "Điều hướng",
-                    className="fw-bold mb-1",
-                ),
-                html.Small(
-                    "Các chức năng của hệ thống",
-                    className="text-muted",
-                ),
+                html.H5("Điều hướng", className="fw-bold mb-1"),
+                html.Small("Các chức năng của hệ thống", className="text-muted"),
             ],
             className="mb-4",
         ),
-        # Container chứa menu động
-        html.Div(id="sidebar-navigation-container")
+        # Khởi tạo trực tiếp bằng hàm chuẩn hóa, tránh lặp code
+        html.Div(
+            build_sidebar_nav(),
+            id="sidebar-navigation-container"
+        )
     ],
     id="app-sidebar",
     title="Menu",
@@ -147,7 +127,7 @@ sidebar = dbc.Offcanvas(
 
 
 # =========================================================
-#                      SIDEBAR CALLBACK
+#                   SIDEBAR CALLBACKS
 # =========================================================
 
 @callback(
@@ -156,172 +136,21 @@ sidebar = dbc.Offcanvas(
 )
 def update_sidebar_navigation(is_open):
     """
-    Tự động cập nhật danh sách menu kèm theo style giao diện Bootstrap khi mở sidebar.
+    Cập nhật lại menu khi sidebar mở ra để đồng bộ trạng thái active của trang hiện tại.
     """
     if not is_open:
         return dash.no_update
         
-    pages = sorted(
-        dash.page_registry.values(),
-        key=lambda page: page.get("order", 999),
-    )
-
-    navigation = []
-    for page in pages:
-        if page.get("path") == "/not-found":
-            continue
-            
-        navigation.append(
-            dbc.NavLink(
-                [
-                    html.I(className="bi bi-chevron-right me-2"),
-                    html.Span(page.get("name", "Unnamed")),
-                ],
-                href=page.get("path"),
-                active="exact",
-                className="mb-1 rounded py-2 px-3",
-            )
-        )
-
-    # Đưa vào dbc.Nav để giữ chuẩn giao diện thanh menu dọc (vertical, pills)
-    return dbc.Nav(
-        navigation,
-        vertical=True,
-        pills=True,
-    )
+    return build_sidebar_nav()
 
 
 
 
 
-# =========================================================
-#                        HEADER
-# =========================================================
-
-header = html.Header(
-    dbc.Container(
-        [
-            # Menu button
-            dbc.Button(
-                html.Img(
-                    src="/assets/images/menu.jpg",
-                    style={
-                        "height": "32px",
-                        "width": "32px",
-                        "objectFit": "contain",
-                    },
-                ),
-                id="sidebar-toggle",
-                color="link",
-                className="p-0 me-3 d-flex align-items-center",
-            ),
-
-            # Title
-            html.Div(
-                [
-                    html.H2(
-                        "Phân tích Dữ liệu thi Tốt nghiệp THPT",
-                        className="mb-0 fw-bold text-primary",
-                        style={
-                            "fontSize": "1.45rem",
-                            "letterSpacing": "1px",
-                        },
-                    ),
-
-                    html.Span(
-                        "Đồ án tốt nghiệp",
-                        className="badge rounded-pill ms-3",
-                        style={
-                            "backgroundColor": "#e7f1ff",
-                            "color": "#0d6efd",
-                            "fontWeight": "500",
-                            "padding": "0.45rem 0.8rem",
-                        },
-                    ),
-                ],
-                className="d-flex align-items-center flex-wrap",
-            ),
-
-            # Home
-            html.A(
-                html.Img(
-                    src="/assets/images/home.png",
-                    style={
-                        "height": "34px",
-                        "width": "auto",
-                    },
-                ),
-                href="/",
-                className="ms-auto d-flex align-items-center",
-            ),
-        ],
-        fluid=True,
-        className="d-flex align-items-center",
-    ),
-    style=STYLES["HEADER"],
-)
-
-
-
-
-
-# =========================================================
-#                          MAIN
-# =========================================================
-
-main = html.Main(
-    dbc.Container(
-        html.Div(
-            page_container,
-            className="animate__animated animate__fadeIn",
-        ),
-        fluid=True,
-        className="px-md-4",
-    ),
-    style=STYLES["MAIN"],
-)
-
-
-
-
-
-# =========================================================
-#                         FOOTER
-# =========================================================
-
-footer = html.Footer(
-    dbc.Container(
-        html.P(
-            [
-                "© 2026 Developed by ",
-                html.Strong(
-                    "Mus",
-                    className="text-white",
-                ),
-                " | Information Systems",
-            ],
-            className="mb-0 text-center small text-white-50",
-        ),
-        fluid=True,
-    ),
-    style=STYLES["FOOTER"],
-)
-
-
-
-
-
-# =========================================================
-#                      SIDEBAR CALLBACK
-# =========================================================
-
-# Cập nhật lại callback xử lý sidebar để nó tự đóng khi:
-# 1. Bấm nút toggle mở/đóng menu
-# 2. Hoặc khi người dùng bấm vào bất kỳ đường dẫn nào trên menu để chuyển trang
 @callback(
     Output("app-sidebar", "is_open"),
     [
-        Input("sidebar-toggle", "n_clicks"),                        # Lắng nghe sự kiện click vào các NavLink nằm trong menu điều hướng
+        Input("sidebar-toggle", "n_clicks"),
         Input({"type": "sidebar-link", "index": ALL}, "n_clicks"),
     ],
     [
@@ -336,11 +165,9 @@ def toggle_sidebar(n_toggle, link_clicks, is_open):
         
     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
     
-    # Nếu bấm nút toggle thì đảo trạng thái (mở -> đóng, đóng -> mở)
     if "sidebar-toggle" in triggered_id:
         return not is_open
         
-    # Nếu bấm vào bất kỳ đường dẫn trang nào trong sidebar thì luôn đóng lại (False)
     return False
 
 
@@ -348,7 +175,89 @@ def toggle_sidebar(n_toggle, link_clicks, is_open):
 
 
 # =========================================================
-#                       APP LAYOUT
+#                    HEADER, MAIN, FOOTER
+# =========================================================
+
+header = html.Header(
+    dbc.Container(
+        [
+            dbc.Button(
+                html.Img(
+                    src="/assets/images/menu.jpg",
+                    style={"height": "32px", "width": "32px", "objectFit": "contain"},
+                ),
+                id="sidebar-toggle",
+                color="link",
+                className="p-0 me-3 d-flex align-items-center",
+            ),
+            html.Div(
+                [
+                    html.H2(
+                        "Phân tích Dữ liệu thi Tốt nghiệp THPT",
+                        className="mb-0 fw-bold text-primary",
+                        style={"fontSize": "1.45rem", "letterSpacing": "1px"},
+                    ),
+                    html.Span(
+                        "Đồ án tốt nghiệp",
+                        className="badge rounded-pill ms-3",
+                        style={
+                            "backgroundColor": "#e7f1ff",
+                            "color": "#0d6efd",
+                            "fontWeight": "500",
+                            "padding": "0.45rem 0.8rem",
+                        },
+                    ),
+                ],
+                className="d-flex align-items-center flex-wrap",
+            ),
+            html.A(
+                html.Img(
+                    src="/assets/images/home.png",
+                    style={"height": "34px", "width": "auto"},
+                ),
+                href="/",
+                className="ms-auto d-flex align-items-center",
+            ),
+        ],
+        fluid=True,
+        className="d-flex align-items-center",
+    ),
+    style=STYLES["HEADER"],
+)
+
+main = html.Main(
+    dbc.Container(
+        html.Div(
+            page_container,
+            className="animate__animated animate__fadeIn",
+        ),
+        fluid=True,
+        className="px-md-4",
+    ),
+    style=STYLES["MAIN"],
+)
+
+footer = html.Footer(
+    dbc.Container(
+        html.P(
+            [
+                "© 2026 Developed by ",
+                html.Strong("Mus", className="text-white"),
+                " | Information Systems",
+            ],
+            className="mb-0 text-center small text-white-50",
+        ),
+        fluid=True,
+    ),
+    style=STYLES["FOOTER"],
+)
+
+
+
+
+
+# =========================================================
+#                         APP LAYOUT
 # =========================================================
 
 app_layout = html.Div(
@@ -356,28 +265,15 @@ app_layout = html.Div(
         html.Noscript(
             html.Div(
                 [
-                    html.H3(
-                        "YÊU CẦU JAVASCRIPT",
-                        className="text-danger fw-bold",
-                    ),
-                    html.P(
-                        "Vui lòng kích hoạt JavaScript "
-                        "để sử dụng hệ thống.",
-                        className="text-muted",
-                    ),
+                    html.H3("YÊU CẦU JAVASCRIPT", className="text-danger fw-bold"),
+                    html.P("Vui lòng kích hoạt JavaScript để sử dụng hệ thống.", className="text-muted"),
                 ],
                 className="text-center mt-5",
             )
         ),
-
         html.Div(
             id="protected-content",
-            children=[
-                sidebar,
-                header,
-                main,
-                footer,
-            ],
+            children=[sidebar, header, main, footer],
             style=STYLES["APP"],
         ),
     ]

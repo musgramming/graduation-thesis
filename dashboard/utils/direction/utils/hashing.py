@@ -3,6 +3,8 @@ import hmac
 import hashlib
 import random
 import platform
+import subprocess
+import getpass
 from dotenv import load_dotenv
 
 
@@ -20,19 +22,24 @@ if not os.path.exists(dotenv_path):
         f.write(f"RANDOM_SALT={salt}")
 
 
+
+
 def protect_env_file(filepath: str):
     """
     Thiết lập quyền truy cập file ở mức hệ điều hành (OS-level permissions).
     Đảm bảo chỉ người dùng sở hữu tiến trình hiện tại mới có quyền đọc/ghi file Salt.
-
-    Args:
-        filepath (str): Đường dẫn đến file .env cần bảo vệ.
     """
     try:
         if platform.system() == "Windows":
-            user = os.getlogin()
-            os.system(f'icacls "{filepath}" /inheritance:r >nul 2>&1')
-            os.system(f'icacls "{filepath}" /grant:r {user}:(R,W) >nul 2>&1')
+            user = getpass.getuser()
+            # Gộp chung /inheritance:r và /grant vào một lệnh duy nhất để tránh lặp lại
+            cmd = f'icacls "{filepath}" /inheritance:r /grant:r {user}:(R,W)'
+            subprocess.run(
+                cmd, 
+                shell=True, 
+                stdout=subprocess.DEVNULL, 
+                stderr=subprocess.DEVNULL
+            )
         else:
             os.chmod(filepath, 0o600)
     except Exception:

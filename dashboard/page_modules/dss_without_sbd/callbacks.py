@@ -2,11 +2,13 @@ from dash import html, dcc, callback, Input, Output, State, no_update, clientsid
 import polars as pl
 import dash_bootstrap_components as dbc
 
+from .list_of_id import pid
+
 from data import TO_HOP
 from utils.build_script import display_graph_and_table
+from utils.exception import todo, unimplemented, unreachable
 from utils.persistent import make_persistent
 
-from .list_of_id import pid
 
 
 

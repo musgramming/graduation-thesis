@@ -12,5 +12,5 @@ api_bp = Blueprint("accessing_api", __name__)
 
 @api_bp.get("/about-me")
 @api_bp.get("/api/about-me")
-def show_about_me():
+def show_about_me() -> Response:
     return Response(about_me, 200, mimetype="text/plain")

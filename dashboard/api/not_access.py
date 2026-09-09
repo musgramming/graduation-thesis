@@ -10,12 +10,12 @@ api_bp = Blueprint("not_accessing_api", __name__)
 
 
 @api_bp.get("/api")
-def access():
+def access() -> Response:
     return Response("Access denied", 403)
 
 
 
 @api_bp.get("/robots.txt")
 @api_bp.get("/api/robots.txt")
-def access_robots():
+def access_robots() -> Response:
     return Response(robots, 200, mimetype="text/plain")

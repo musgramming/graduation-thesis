@@ -2,6 +2,9 @@ from dash import callback, Input, Output, State, html, clientside_callback, Clie
 import dash_bootstrap_components as dbc
 import polars as pl
 
+
+from .list_of_id import pid
+
 from data import (
     BANG_DIEM_TO_HOP,
     TO_HOP,
@@ -10,7 +13,7 @@ from data import (
 )
 
 from utils.build_script import display_graph_and_table
-from .list_of_id import pid
+from utils.exception import todo, unimplemented, unreachable
 
 
 

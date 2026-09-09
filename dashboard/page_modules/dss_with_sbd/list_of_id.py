@@ -1,5 +1,9 @@
 import json
 from pathlib import Path
+
+import json5
+import hjson
+
 from utils.direction import PageDirection
 
 

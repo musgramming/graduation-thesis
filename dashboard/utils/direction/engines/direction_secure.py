@@ -1,15 +1,10 @@
-from dash import MATCH, ALL, ALLSMALLER
-import inspect
-import os
-import hmac
-import hashlib
-import random
-import platform
-from dotenv import load_dotenv
 from typing import Optional, Dict, Any, Union
 
-from .utils.hashing import __RANDOM_SALT, __RANDOM_SALT_HEX, _hashing
+from dash import MATCH, ALL, ALLSMALLER
 
+from ..exception import DashIdException, DashPageException
+from ..utils.hashing import _hashing
+from ..utils.resolve import _resolve_page_name
 
 
 
@@ -39,10 +34,7 @@ class PageDirection:
             str: Mã băm đại diện cho Namespace của trang.
         """
         if page_name is None:
-            stack = inspect.stack()
-            frame_info = stack[2]
-            filename = frame_info.filename
-            page_name = os.path.relpath(filename, os.getcwd()).replace(".py", "")
+            page_name = _resolve_page_name()
             
         return _hashing(page_name)
 
@@ -58,11 +50,11 @@ class PageDirection:
             _SingleDirection: Instance quản lý ID dành riêng cho trang đã được băm hóa.
         
         Raises:
-            Exception: Page đã tạo rồi
+            DashPageException: Page đã tạo rồi
         """
         page_hash = self.__get_page_hash(page)
         if page_hash in self.__pages:
-            raise Exception(f"Trang với mã hash {page_hash} đã được khởi tạo!")
+            raise DashPageException(f"Trang với mã hash {page_hash} đã được khởi tạo!")
         
         self.__pages[page_hash] = _SingleDirection(page_hash)
         return self.__pages[page_hash]
@@ -79,11 +71,11 @@ class PageDirection:
             _SingleDirection: Instance quản lý ID tương ứng.
         
         Raises:
-            Exception: Page chưa được đăng ký
+            DashPageException: Page chưa được đăng ký
         """        
         page_hash = self.__get_page_hash(page)
         if page_hash not in self.__pages:
-            raise Exception(f"Trang {page_hash} chưa được đăng ký! Hãy gọi assign_page trước.")
+            raise DashPageException(f"Trang {page_hash} chưa được đăng ký! Hãy gọi assign_page trước.")
         
         return self.__pages[page_hash]
 
@@ -141,14 +133,14 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID chứa mã băm đã được đăng ký.
 
         Raises:
-            Exception: Nếu ID trống hoặc đã tồn tại trên trang này.
+            DashIdException: Nếu ID trống hoặc đã tồn tại trên trang này.
         """
 
         if not id_name: 
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         if id_name in self.__id_to_hash:
-            raise Exception(f"ID '{id_name}' đã tồn tại")
+            raise DashIdException(f"ID '{id_name}' đã tồn tại")
         
         id_hash = _hashing(id_name)
         self.__id_to_hash[id_name] = id_hash
@@ -170,17 +162,17 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID với chỉ số index mới.
         
         Raises:
-            Exception: Nếu ID chưa khai báo, hoặc là ID tĩnh.
+            DashIdException: Nếu ID chưa khai báo, hoặc là ID tĩnh.
         """
         if not id_name: 
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
         
         if id_name not in self.__id_to_hash:
-            raise Exception(f"ID '{id_name}' chưa tồn tại để sinh thêm index")
+            raise DashIdException(f"ID '{id_name}' chưa tồn tại để sinh thêm index")
 
         id_hash = self.__id_to_hash[id_name]
         if self.__table_of_id[id_hash] is None:
-            raise Exception(f"ID '{id_name}' là id tĩnh. Không thể dùng next_index()")
+            raise DashIdException(f"ID '{id_name}' là id tĩnh. Không thể dùng next_index()")
         
         self.__table_of_id[id_hash] += 1
         return self.__build_dict(id_hash, self.__table_of_id[id_hash])
@@ -198,30 +190,30 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID hoàn chỉnh.
 
         Raises:
-            Exception: 
+            DashIdException: 
                 - ID chưa được đăng ký qua `assign_id`.
                 - Truyền index cho ID tĩnh hoặc bỏ trống index cho ID động.
                 - Truy cập vào một index chưa được khởi tạo (OutOfBounds).
         """
         if not id_name: 
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
         
         if id_name not in self.__id_to_hash:
-            raise Exception(f"ID '{id_name}' chưa tồn tại")
+            raise DashIdException(f"ID '{id_name}' chưa tồn tại")
         
         id_hash = self.__id_to_hash[id_name]
         val_in_table = self.__table_of_id[id_hash]
 
         if val_in_table is None:
             if index is not None:
-                raise Exception(f"ID '{id_name}' là dạng static. Không được truyền index")
+                raise DashIdException(f"ID '{id_name}' là dạng static. Không được truyền index")
             return self.__build_dict(id_hash, index=None)
         
         if index is None:
-            raise Exception(f"ID '{id_name}' là dạng dynamic. Phải truyền index")
+            raise DashIdException(f"ID '{id_name}' là dạng dynamic. Phải truyền index")
         
         if isinstance(index, int) and val_in_table < index:
-            raise Exception(f"Index {index} chưa được khởi tạo cho ID '{id_name}'")
+            raise DashIdException(f"Index {index} chưa được khởi tạo cho ID '{id_name}'")
         
         return self.__build_dict(id_hash, index)
 
@@ -238,17 +230,17 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID với chỉ số index đã giảm.
 
         Raises:
-            Exception: Nếu ID không tồn tại, là ID tĩnh, hoặc đang ở chỉ số tối thiểu (1).
+            DashIdException: Nếu ID không tồn tại, là ID tĩnh, hoặc đang ở chỉ số tối thiểu (1).
         """
         id_hash = self.__id_to_hash.get(id_name)
         if not id_hash:
-            raise Exception(f"ID '{id_name}' chưa tồn tại")
+            raise DashIdException(f"ID '{id_name}' chưa tồn tại")
         
         if self.__table_of_id[id_hash] is None:
-            raise Exception(f"ID '{id_name}' là id tĩnh.")
+            raise DashIdException(f"ID '{id_name}' là id tĩnh.")
         
         if self.__table_of_id[id_hash] <= 1:
-            raise Exception(f"ID '{id_name}' không thể giảm thêm index.")
+            raise DashIdException(f"ID '{id_name}' không thể giảm thêm index.")
 
         self.__table_of_id[id_hash] -= 1
         return self.__build_dict(id_hash, self.__table_of_id[id_hash])
@@ -267,21 +259,21 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID chứa mã băm với trường 'index' là hằng số MATCH.
 
         Raises:
-            Exception: 
+            DashIdException: 
                 - Nếu id_name trống hoặc chưa được đăng ký.
                 - Nếu là ID tĩnh: Ngăn chặn vì MATCH trên giá trị tĩnh sẽ không bao giờ kích hoạt Callback 
                   (vô nghĩa về mặt vận hành).
         """
         if not id_name:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         id_hash = self.__id_to_hash.get(id_name)
         
         if not id_hash:
-            raise Exception(f"ID '{id_name}' không tồn tại")
+            raise DashIdException(f"ID '{id_name}' không tồn tại")
 
         if self.__table_of_id[id_hash] is None:
-            raise Exception(f"ID '{id_name}' là ID tĩnh, không hợp lệ cho MATCH")
+            raise DashIdException(f"ID '{id_name}' là ID tĩnh, không hợp lệ cho MATCH")
         
         return self.__build_dict(id_hash, index=MATCH)
 
@@ -299,21 +291,21 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID với trường 'index' là hằng số ALL.
 
         Raises:
-            Exception: 
+            DashIdException: 
                 - Nếu id_name trống hoặc chưa được đăng ký.
                 - Nếu ID là dạng tĩnh: Hệ thống chủ động chặn để triệt tiêu cấu trúc dữ liệu đơn tử 
                   (single-element list), tránh gây nhiễu loạn và phức tạp hóa logic xử lý trong Callback.
         """
         if not id_name:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         id_hash = self.__id_to_hash.get(id_name)
         
         if not id_hash:
-            raise Exception(f"ID '{id_name}' không tồn tại")
+            raise DashIdException(f"ID '{id_name}' không tồn tại")
 
         if self.__table_of_id[id_hash] is None:
-            raise Exception(f"ID '{id_name}' là ID tĩnh, không hợp lệ cho ALL")
+            raise DashIdException(f"ID '{id_name}' là ID tĩnh, không hợp lệ cho ALL")
             
         return self.__build_dict(id_hash, index=ALL)
 
@@ -331,19 +323,19 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID với trường 'index' là hằng số ALLSMALLER.
 
         Raises:
-            Exception: 
+            DashIdException: 
                 - Nếu id_name trống hoặc chưa được đăng ký.
                 - Nếu ID không phải dạng động: Cơ chế ALLSMALLER yêu cầu tính tuần tự của index để thực hiện so sánh toán học.
         """
         if not id_name:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         id_hash = self.__id_to_hash.get(id_name)
         
         if not id_hash:
-            raise Exception(f"ID '{id_name}' không tồn tại")
+            raise DashIdException(f"ID '{id_name}' không tồn tại")
 
         if self.__table_of_id[id_hash] is None:
-            raise Exception(f"ID '{id_name}' là ID tĩnh, không hợp lệ cho ALLSMALLER")
+            raise DashIdException(f"ID '{id_name}' là ID tĩnh, không hợp lệ cho ALLSMALLER")
             
         return self.__build_dict(id_hash, index=ALLSMALLER)

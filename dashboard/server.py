@@ -29,7 +29,6 @@ app = Dash(
     name="My App",
     server=server,
     use_pages=True,
-    external_stylesheets=["/assets/bootstrap/css/bootstrap.min.css"],
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"},
         {"name": "description", "content": "Hệ thống phân tích và trực quan hóa phổ điểm thi tốt nghiệp THPT phục vụ đồ án tốt nghiệp."},

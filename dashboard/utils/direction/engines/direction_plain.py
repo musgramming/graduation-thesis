@@ -1,10 +1,9 @@
 from typing import Union, Any, Dict
 
 from dash import MATCH, ALL, ALLSMALLER
-import inspect
-import os
 
-
+from ..utils.resolve import _resolve_page_name
+from ..exception import DashIdException, DashPageException
 
 
 
@@ -22,16 +21,6 @@ class PageDirection:
         self.__pages = {}
 
 
-    def __get_page_name(self) -> str:
-        stack = inspect.stack()
-        frame_info = stack[2]
-        filename = frame_info.filename
-        
-        rel_path = os.path.relpath(filename, os.getcwd())
-        
-        return rel_path.replace(os.sep, ".").replace(".py", "")
-
-
     def assign_page(self, page: str = None):
         """
         Khởi tạo hoặc lấy ra bộ quản lý ID cho một trang cụ thể.
@@ -43,11 +32,11 @@ class PageDirection:
             _SingleDirection: Đối tượng quản lý ID riêng biệt cho trang đó.
         
         Raises:
-            Exception: Page đã được khởi tạo
+            DashPageException: Page đã được khởi tạo
         """
-        page_name = page or self.__get_page_name()
+        page_name = page or _resolve_page_name()
         if page_name in self.__pages:
-            raise RuntimeError(f"Page '{page_name}' đã được đăng ký trước đó!")
+            raise DashPageException(f"Page '{page_name}' đã được đăng ký trước đó!")
             
         self.__pages[page_name] = _SingleDirection(page_name)
         return self.__pages[page_name]
@@ -65,11 +54,11 @@ class PageDirection:
             _SingleDirection: Đối tượng quản lý ID riêng biệt cho trang đó.
         
         Raises:
-            Exception: Page chưa được khởi tạo        
+            DashPageException: Page chưa được khởi tạo        
         """
-        page_name = page or self.__get_page_name()
+        page_name = page or _resolve_page_name()
         if page_name not in self.__pages:
-            raise LookupError(f"Không tìm thấy trang '{page_name}'. Bạn phải gọi assign_page() trước!")
+            raise DashPageException(f"Không tìm thấy trang '{page_name}'. Bạn phải gọi assign_page() trước!")
             
         return self.__pages[page_name]
 
@@ -112,14 +101,14 @@ class _SingleDirection:
             is_dynamic (bool): Nếu True, ID sẽ hỗ trợ cơ chế Pattern-matching.
             
         Raises:
-            Exception: Nếu id_name trống
-            Exception: Nếu ID đã được đăng ký trước đó trên cùng một trang.
+            DashIdException: Nếu id_name trống
+            DashIdException: Nếu ID đã được đăng ký trước đó trên cùng một trang.
         """
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
         
         if id_name in self.__id_registry:
-            raise Exception(f"ID '{id_name}' đã được đăng ký!")
+            raise DashIdException(f"ID '{id_name}' đã được đăng ký!")
         
         self.__id_registry[id_name] = 1 if is_dynamic else None
         return self.__build_dict(id_name, self.__id_registry[id_name])
@@ -136,14 +125,14 @@ class _SingleDirection:
             dict: ID với index mới đã tăng.
 
         Raises:
-            Exception: Nếu `id_name` trống
-            Exception: Nếu `id_name` chưa được khai báo hoặc là ID tĩnh (static).
+            DashIdException: Nếu `id_name` trống
+            DashIdException: Nếu `id_name` chưa được khai báo hoặc là ID tĩnh (static).
         """
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         if id_name not in self.__id_registry or self.__id_registry[id_name] is None:
-            raise Exception(f"ID '{id_name}' không phải là ID động.")
+            raise DashIdException(f"ID '{id_name}' không phải là ID động.")
         
         self.__id_registry[id_name] += 1
         return self.__build_dict(id_name, self.__id_registry[id_name])
@@ -160,22 +149,22 @@ class _SingleDirection:
             dict: ID với index đã giảm.
 
         Raises:
-            Exception: Nếu ID trống
-            Exception: Nếu ID chưa tồn tại.
-            Exception: Nếu ID là tĩnh (không có index để giảm).
-            Exception: Nếu index hiện tại đang là 1 (không thể giảm thêm).
+            DashIdException: Nếu ID trống
+            DashIdException: Nếu ID chưa tồn tại.
+            DashIdException: Nếu ID là tĩnh (không có index để giảm).
+            DashIdException: Nếu index hiện tại đang là 1 (không thể giảm thêm).
         """
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
         
         if id_name not in self.__id_registry:
-            raise Exception(f"ID '{id_name}' chưa tồn tại.")
+            raise DashIdException(f"ID '{id_name}' chưa tồn tại.")
 
         if self.__id_registry[id_name] is None:
-            raise Exception(f"ID {id_name} là ID tĩnh.")
+            raise DashIdException(f"ID {id_name} là ID tĩnh.")
 
         if self.__id_registry[id_name] <= 1:
-            raise Exception(f"ID {id_name} đạt giới hạn tối thiểu (1).")
+            raise DashIdException(f"ID {id_name} đạt giới hạn tối thiểu (1).")
 
         self.__id_registry[id_name] -= 1
         return self.__build_dict(id_name, self.__id_registry[id_name])
@@ -193,15 +182,15 @@ class _SingleDirection:
             dict: ID hoàn chỉnh.
 
         Raises:
-            Exception: Nếu id_name trống        
-            Exception: Nếu gọi một ID chưa từng được qua bước `assign_id`.
+            DashIdException: Nếu id_name trống        
+            DashIdException: Nếu gọi một ID chưa từng được qua bước `assign_id`.
         """
         
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         if id_name not in self.__id_registry:
-            raise Exception(f"Lỗi: ID '{id_name}' chưa được khai báo!")
+            raise DashIdException(f"Lỗi: ID '{id_name}' chưa được khai báo!")
         
         if self.__id_registry[id_name] is not None and index is None:
             index = self.__id_registry[id_name]
@@ -217,18 +206,18 @@ class _SingleDirection:
             id_name: Tên của id
 
         Raises:
-            Exception: Nếu truyền id_name trống
-            Exception: Nếu gọi một id_name chưa được khởi tạo trước đó
-            Exception: Nếu gọi một id_name là ID tĩnh, khi này không sử dụng phương thức MATCH
+            DashIdException: Nếu truyền id_name trống
+            DashIdException: Nếu gọi một id_name chưa được khởi tạo trước đó
+            DashIdException: Nếu gọi một id_name là ID tĩnh, khi này không sử dụng phương thức MATCH
         """
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         if id_name not in self.__id_registry:
-            raise Exception(f"ID {id_name} chưa được khởi tạo")
+            raise DashIdException(f"ID {id_name} chưa được khởi tạo")
         
         if self.__id_registry[id_name] is None:
-            raise Exception(f"ID {id_name} là ID tĩnh.")
+            raise DashIdException(f"ID {id_name} là ID tĩnh.")
         
         return self.__build_dict(id_name, MATCH)
         
@@ -244,18 +233,18 @@ class _SingleDirection:
             Dict[str, Any]: Dictionary ID với trường 'index' là hằng số ALL.
 
         Raises:
-            Exception: Nếu id_name trống
-            Exception: Nếu gọi một id_name chưa được khởi tạo trước đó
-            Exception: Nếu gọi một id_name là ID tĩnh, khi này không sử dụng phương thức ALL
+            DashIdException: Nếu id_name trống
+            DashIdException: Nếu gọi một id_name chưa được khởi tạo trước đó
+            DashIdException: Nếu gọi một id_name là ID tĩnh, khi này không sử dụng phương thức ALL
         """
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         if id_name not in self.__id_registry:
-            raise Exception(f"ID {id_name} chưa được khởi tạo")
+            raise DashIdException(f"ID {id_name} chưa được khởi tạo")
         
         if self.__id_registry[id_name] is None:
-            raise Exception(f"ID {id_name} là ID tĩnh.")
+            raise DashIdException(f"ID {id_name} là ID tĩnh.")
         
         return self.__build_dict(id_name, ALL)
 
@@ -268,17 +257,17 @@ class _SingleDirection:
             id_name: Tên của id
 
         Raises:
-            Exception: Nếu id_name trống
-            Exception: Nếu gọi một id_name chưa được khởi tạo trước đó
-            Exception: Nếu gọi một id_name là ID tĩnh, khi này không sử dụng phương thức ALLSMALLER
+            DashIdException: Nếu id_name trống
+            DashIdException: Nếu gọi một id_name chưa được khởi tạo trước đó
+            DashIdException: Nếu gọi một id_name là ID tĩnh, khi này không sử dụng phương thức ALLSMALLER
         """
         if id_name is None:
-            raise Exception("Không được để ID trống")
+            raise DashIdException("Không được để ID trống")
 
         if id_name not in self.__id_registry:
-            raise Exception(f"ID {id_name} chưa được khởi tạo")
+            raise DashIdException(f"ID {id_name} chưa được khởi tạo")
         
         if self.__id_registry[id_name] is None:
-            raise Exception(f"ID {id_name} là ID tĩnh.")
+            raise DashIdException(f"ID {id_name} là ID tĩnh.")
         
         return self.__build_dict(id_name, ALLSMALLER)
