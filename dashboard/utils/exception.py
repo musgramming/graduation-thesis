@@ -2,7 +2,7 @@ import os
 from typing import Never
 from dash.exceptions import PreventUpdate
 
-from direction.exception import DashModeException
+from utils.direction.exception import DashModeException
 
 
 class DashMacroError(Exception):

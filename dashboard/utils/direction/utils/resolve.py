@@ -1,11 +1,22 @@
+from pathlib import Path
 import sys
-import os
 
 
 def _resolve_page_name() -> str:
-    """Hàm phụ trợ lấy tên trang tối ưu bằng sys._getframe."""
+    """Lấy tên trang từ module gọi hàm, độc lập với hệ điều hành."""
     frame = sys._getframe(2)
-    filename = frame.f_code.co_filename
-    
-    rel_path = os.path.relpath(filename, os.getcwd())
-    return rel_path.replace(os.sep, ".").replace(".py", "")
+    try:
+        filename = frame.f_code.co_filename
+    finally:
+        del frame
+
+    path = Path(filename).resolve()
+    cwd = Path.cwd().resolve()
+
+    try:
+        relative = path.relative_to(cwd)
+    except ValueError:
+        # File nằm ngoài working directory
+        relative = path
+
+    return relative.with_suffix("").as_posix().replace("/", ".")
