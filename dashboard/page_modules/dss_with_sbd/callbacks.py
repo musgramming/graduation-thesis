@@ -309,10 +309,8 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
     return no_update, no_update, no_update, no_update
 
 
-# ---------------------------------------------------------------------------
-# DROPDOWN SO SÁNH
-# ---------------------------------------------------------------------------
-# Component đã tồn tại trong layout. Callback chỉ cập nhật properties.
+
+
 
 @callback(
     [
@@ -428,17 +426,16 @@ clientside_callback(
 
 
 
-# ---------------------------------------------------------------------------
-# SERVER-SIDE: PHÂN TÍCH
-# ---------------------------------------------------------------------------
 @callback(
     Output(pid("full-div"), "children"),
     Input(pid("analysis"), "n_clicks"),
-    State(pid("score"), "children"),
-    State(pid("year"), "value"),
-    State(pid("floor-score-slider"), "value"),
-    State(pid("combs-script"), "value"),
-    State(pid("mode-selection"), "value"),
+    [
+        State(pid("score"), "children"),
+        State(pid("year"), "value"),
+        State(pid("floor-score-slider"), "value"),
+        State(pid("combs-script"), "value"),
+        State(pid("mode-selection"), "value")
+    ],
     prevent_initial_call=True,
 )
 def analysis_callback(n, score_text, year, floor_score, combs, mode):

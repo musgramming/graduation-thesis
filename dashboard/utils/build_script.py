@@ -6,9 +6,10 @@ import plotly.express as px
 import polars as pl
 import dash_bootstrap_components as dbc
 
-from data import BANG_DIEM_TO_HOP
-from .graph import build_strict_graph
 from .exception import todo, unimplemented, unreachable
+from .graph import build_strict_graph
+
+from data import BANG_DIEM_TO_HOP
 
 
 
@@ -140,7 +141,10 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
     # Bước 2: Tính Robust value (r_val)
     df_robust = df.join(stats, on="Tổ hợp").with_columns(
         pl.when(pl.col("q3") > pl.col("q1"))
-        .then((pl.col("Tổng điểm") - pl.col("median")) / (pl.col("q3") - pl.col("q1")))
+        .then(
+            (pl.col("Tổng điểm") - pl.col("median")) / 
+            (pl.col("q3") - pl.col("q1"))
+        )
         .otherwise(0.0)
         .alias("r_val")
     )
@@ -165,6 +169,7 @@ def filter_robust_score(year: int, floor_score : float, combs : list[str]) -> pl
         .filter(pl.col("Điểm quy đổi") >= floor_score)
         .drop(["median", "q1", "q3", "r_val", "r_min", "r_max"])
     )
+
 
 
 
@@ -287,6 +292,11 @@ def display_graph_and_table(
             className="mb-0",
         )
 
+    if mode not in ["raw-score", "z-score", "robust"]:
+        unreachable(
+            f"Không tồn tại mode {mode}"
+        )
+
     lf_transformed = transform_scores(
         year,
         combs,
@@ -301,7 +311,7 @@ def display_graph_and_table(
             pl.col("Điểm quy đổi").max().alias("Điểm quy đổi"),
             pl.col("Tổ hợp")
             .get(pl.col("Điểm quy đổi").arg_max())
-            .alias("Tổ hợp_chọn"),
+            .alias("Tổ hợp_chọn")
         ])
     )
 
@@ -311,7 +321,7 @@ def display_graph_and_table(
         return dbc.Alert(
             "Không tìm thấy dữ liệu phù hợp với bộ lọc hiện tại.",
             color="warning",
-            className="mb-0",
+            className="mb-0"
         )
 
 
