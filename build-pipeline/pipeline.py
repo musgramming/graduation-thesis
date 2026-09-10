@@ -152,7 +152,7 @@ def tien_xu_ly_bang_diem_chinh(file_chinh: str, year: int) -> pl.LazyFrame:
 
 
     # B4: Xác định tính hợp lệ của điểm thi, gồm: 
-    # - 2 môn bắt buộc (Văn, Toán) không được bị điểm liệt (dưới 1)
+    # - 2 môn bắt buộc (Văn, Toán) không được bị điểm liệt (từ 1.0 điểm trở xuống)
     # - Có đúng 2 bài tự chọn và không bài nào bị điểm liệt
     num_attempted = pl.sum_horizontal(
         pl.col(MON_TU_CHON)
@@ -165,12 +165,20 @@ def tien_xu_ly_bang_diem_chinh(file_chinh: str, year: int) -> pl.LazyFrame:
             .cast(pl.Int8)
     )
 
+    # Gán điểm học bạ trung bình 3 năm mặc định chung cho mọi học sinh là 8.0 
+    # (dựa trên thực tế học sinh thường giữ học bạ cao để xét tuyển sớm)
+    DIEM_HOC_BA_MAC_DINH = 7.5
+
+    tong_diem_4_mon = (pl.col("Toán") + pl.col("Văn") + pl.sum_horizontal(pl.col(MON_TU_CHON))) / 4.0
+    diem_xet_tot_nghiep = DIEM_HOC_BA_MAC_DINH * 0.5 + tong_diem_4_mon * 0.5
+
     DF_CHINH = DF_CHINH.with_columns([
         (
             (pl.col("Toán") > 1.0) &
             (pl.col("Văn") > 1.0) &
             (num_attempted == 2) &
-            (num_passed == 2)
+            (num_passed == 2) & 
+            (diem_xet_tot_nghiep >= 5.0)
         ).alias("is_eligible")
     ])
 
