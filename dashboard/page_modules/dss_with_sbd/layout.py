@@ -359,4 +359,7 @@ layout = dbc.Container([
             className="p-1"
         )
     ], className="mt-4 g-4")
-], fluid=True, className="p-0 px-3 px-md-5 pb-5 bg-light")
+], 
+fluid=True, 
+className="p-0 px-3 px-md-5 pb-5 bg-light"
+)

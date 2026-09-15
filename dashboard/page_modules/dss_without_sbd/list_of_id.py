@@ -8,7 +8,7 @@ from utils.direction import PageDirection
 # ============================================================================
 
 direction = PageDirection()
-page_direction = direction.assign_page("without_sbd")
+page_direction = direction.assign_page("dss-without-sbd")
 
 
 # ============================================================================

@@ -24,6 +24,7 @@ Dashboard hỗ trợ phân tích dữ liệu điểm thi Tốt nghiệp THPT và
 ├── page_modules/           # Layout và callbacks của từng page
 │   ├── dss_without_sbd/
 │   ├── dss_with_sbd/
+│   ├── stat_provinces/
 │   └── main_page/
 ├── tests/                  # Kiểm thử
 ├── utils/                  # Các tiện ích dùng chung

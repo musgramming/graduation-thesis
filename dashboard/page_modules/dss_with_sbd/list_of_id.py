@@ -12,7 +12,7 @@ from utils.direction import PageDirection
 # ---------------------------------------------------------------------------
 
 direction = PageDirection()
-page_direction = direction.assign_page("sbd")
+page_direction = direction.assign_page("dss-with-sbd")
 
 
 # ---------------------------------------------------------------------------

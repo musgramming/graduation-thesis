@@ -4,7 +4,8 @@ from flask import Flask
 from dash import Dash
 from flask_cors import CORS
 
-from main_layout import app_layout
+from template_layout.layout import app_layout
+from template_layout.callback import *
 from api.access import api_bp as access_bp
 from api.not_access import api_bp as not_access_bp
 
@@ -29,6 +30,7 @@ app = Dash(
     name="My App",
     server=server,
     use_pages=True,
+    suppress_callback_exceptions=True,
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"},
         {"name": "description", "content": "Hệ thống phân tích và trực quan hóa phổ điểm thi tốt nghiệp THPT phục vụ đồ án tốt nghiệp."},

@@ -1,0 +1,48 @@
+Layout: 
+- Bên trái:  
+    - Tab 1: Tỉnh thành 
+        - Nhóm bắt buộc: 
+            - Dropdown: bảng chọn môn học (Mặc định: Toán)
+            - Dropdown / Input: bảng chọn năm (Mặc định: 2025)
+            - Dropdown: bảng chọn tỉnh thành (Mặc định: Hà Nội)
+        - Nhóm tự chọn: 
+            - Select (mặc định True): Cho phép tính đến điểm 0 không?
+            - Select (mặc định True): Cho phép tính đến các bạn trượt tốt nghiệp không?
+    
+    - Tab 2: Cả nước
+        - Nhóm bắt buộc: 
+            - Dropdown: bảng chọn môn học
+            - Dropdown / Input: bảng chọn năm
+        - Nhóm tự chọn: 
+            - Select (mặc định True): Cho phép tính đến điểm 0 không?
+            - Select (mặc định True): Cho phép tính đến các bạn trượt tốt nghiệp không?
+
+
+- Bên phải: 
+    - Khi chưa nhấn nút: Làm mờ
+    - Khi đã nhấn nút: 
+        - Chỉ số: 
+            - Top bao nhiêu cả nước (Dựa vào điểm trung bình, Tab 2 không có chỉ số này)
+            - Điểm trung bình
+        
+        - Chi tiết hơn: 
+            - Histogram (chiếm 2/3 bề ngang)
+            - Bảng các giá trị thống kê (chiếm 1/3 bề ngang)
+                - Trung bình
+                - Trung vị
+                - Q1-Q3
+                - STD
+                - Độ xiên (skew)
+        
+        - Chi tiết nhất: 
+            - Tab 2: 
+                - Cột 1: Heatmap theo bản đồ Việt Nam
+                - Cột 2: Bảng thống kê các tỉnh thành (sort theo điểm trung bình). Gồm: 
+                    - Thứ tự
+                    - Tên tỉnh thành
+                    - Trung bình
+                    - Trung vị
+
+
+Callback: 
+- Vẽ biểu đồ và tính toán tham số (như layout bên phải)

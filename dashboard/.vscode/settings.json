@@ -1,5 +1,11 @@
 {
     "python.analysis.autoImportCompletions": false,
     "python.analysis.languageServerMode": "default",
-    "python.analysis.typeCheckingMode": "off"
+    "python.analysis.typeCheckingMode": "off", 
+    
+    "editor.parameterHints.enabled": true, 
+
+    "python.analysis.indexing": true,
+    "python.analysis.useLibraryCodeForTypes": true
+
 }

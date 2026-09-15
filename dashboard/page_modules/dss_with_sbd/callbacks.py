@@ -1,4 +1,14 @@
-from dash import callback, Input, Output, State, html, clientside_callback, ClientsideFunction, no_update, callback_context as ctx
+from dash import (
+    callback, 
+    Input, 
+    Output, 
+    State, 
+    html, 
+    clientside_callback, 
+    ClientsideFunction, 
+    no_update, 
+    callback_context as ctx
+)
 import dash_bootstrap_components as dbc
 import polars as pl
 
