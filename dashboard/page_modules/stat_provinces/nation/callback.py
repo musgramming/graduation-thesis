@@ -274,16 +274,10 @@ def update_nation_dashboard(
         province_statistics
         .select(
             [
-                "rank",
-                "_province_name",
-                "mean",
-                "median",
-            ]
-        )
-        .with_columns(
-            [
-                pl.col("mean").round(2),
-                pl.col("median").round(2),
+                pl.col("rank").alias("Xếp hạng"),
+                pl.col("_province_name").alias("Tỉnh thành"),
+                pl.col("mean").round(2).cast(pl.Decimal(5, 2)).alias("Điểm trung bình"),
+                pl.col("median").round(2).cast(pl.Decimal(5, 2)).alias("Trung vị"),
             ]
         )
         .to_dicts()

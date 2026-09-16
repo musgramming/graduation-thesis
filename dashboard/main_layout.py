@@ -57,7 +57,7 @@ def build_sidebar_nav():
     """
     pages = sorted(
         dash.page_registry.values(),
-        key=lambda page: page.get("order", 999),
+        key=lambda page: page.get("order") if page.get("order") is not None else 999,
     )
 
     navigation = []
