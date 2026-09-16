@@ -1,94 +1,20 @@
+import json
+from pathlib import Path
 import dash
 from dash import html, page_container, callback, Input, Output, State, ALL
 import dash_bootstrap_components as dbc
 
+from .services import build_sidebar_nav
 
 
 
+current_path = Path(__file__).resolve().parent
+style_file = current_path / "styles.json"
 
-# =========================================================
-#                    CONSTANTS & STYLES
-# =========================================================
-
-STYLES = {
-    "APP": {
-        "minHeight": "100vh",
-        "display": "flex",
-        "flexDirection": "column",
-        "backgroundColor": "#f8f9fa",
-        "userSelect": "none",
-    },
-    "HEADER": {
-        "minHeight": "72px",
-        "backgroundColor": "#ffffff",
-        "borderBottom": "1px solid #e9ecef",
-        "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.03)",
-        "display": "flex",
-        "alignItems": "center",
-        "padding": "0 1rem",
-        "position": "sticky",
-        "top": "0",
-        "zIndex": 1030,
-    },
-    "MAIN": {
-        "flex": "1",
-        "overflow": "auto",
-        "padding": "1.5rem 0",
-    },
-    "FOOTER": {
-        "backgroundColor": "#212529",
-        "borderTop": "1px solid #343a40",
-        "padding": "0.9rem 0",
-    },
-}
+with open(style_file, "r", encoding="utf-8") as f:
+    STYLES = json.load(f)
 
 
-
-
-
-# =========================================================
-#                  NAVIGATION BUILDER (Single Source of Truth)
-# =========================================================
-
-def build_sidebar_nav():
-    """
-    Hàm duy nhất chịu trách nhiệm dựng danh sách điều hướng từ Dash Page Registry.
-    Đảm bảo tính nhất quán về Pattern-Matching ID cho callback đóng mở sidebar.
-    """
-    pages = sorted(
-        dash.page_registry.values(),
-        key=lambda page: page.get("order") if page.get("order") is not None else 999,
-    )
-
-    navigation = []
-    for page in pages:
-        if page.get("path") == "/not-found":
-            continue
-            
-        navigation.append(
-            dbc.NavLink(
-                [
-                    html.I(className="bi bi-chevron-right me-2"),
-                    html.Span(page.get("name", "Unnamed")),
-                ],
-                href=page.get("path"),
-                active="exact",
-                className="mb-1 rounded py-2 px-3",
-                id={
-                    "type": "sidebar-link", 
-                    "index": page.get("path")
-                }
-            )
-        )
-
-    if not navigation:
-        return html.Div("Chưa có trang nào được cấu hình.", className="text-muted small p-2")
-
-    return dbc.Nav(
-        navigation,
-        vertical=True,
-        pills=True,
-    )
 
 
 
@@ -125,55 +51,6 @@ sidebar = dbc.Offcanvas(
 
 
 
-
-# =========================================================
-#                   SIDEBAR CALLBACKS
-# =========================================================
-
-@callback(
-    Output("sidebar-navigation-container", "children"),
-    Input("app-sidebar", "is_open"),
-)
-def update_sidebar_navigation(is_open):
-    """
-    Cập nhật lại menu khi sidebar mở ra để đồng bộ trạng thái active của trang hiện tại.
-    """
-    if not is_open:
-        return dash.no_update
-        
-    return build_sidebar_nav()
-
-
-
-
-
-@callback(
-    Output("app-sidebar", "is_open"),
-    [
-        Input("sidebar-toggle", "n_clicks"),
-        Input({"type": "sidebar-link", "index": ALL}, "n_clicks"),
-    ],
-    [
-        State("app-sidebar", "is_open"),
-    ],
-    prevent_initial_call=True,
-)
-def toggle_sidebar(n_toggle, link_clicks, is_open):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return is_open
-        
-    triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    
-    if "sidebar-toggle" in triggered_id:
-        return not is_open
-        
-    return False
-
-
-
-
-
 # =========================================================
 #                    HEADER, MAIN, FOOTER
 # =========================================================
@@ -184,7 +61,11 @@ header = html.Header(
             dbc.Button(
                 html.Img(
                     src="/assets/images/menu.jpg",
-                    style={"height": "32px", "width": "32px", "objectFit": "contain"},
+                    style={
+                        "height": "32px", 
+                        "width": "32px", 
+                        "objectFit": "contain"
+                    },
                 ),
                 id="sidebar-toggle",
                 color="link",
@@ -195,7 +76,10 @@ header = html.Header(
                     html.H2(
                         "Phân tích Dữ liệu thi Tốt nghiệp THPT",
                         className="mb-0 fw-bold text-primary",
-                        style={"fontSize": "1.45rem", "letterSpacing": "1px"},
+                        style={
+                            "fontSize": "1.45rem", 
+                            "letterSpacing": "1px"
+                        },
                     ),
                     html.Span(
                         "Đồ án tốt nghiệp",
@@ -225,6 +109,10 @@ header = html.Header(
     style=STYLES["HEADER"],
 )
 
+
+
+
+
 main = html.Main(
     dbc.Container(
         html.Div(
@@ -236,6 +124,10 @@ main = html.Main(
     ),
     style=STYLES["MAIN"],
 )
+
+
+
+
 
 footer = html.Footer(
     dbc.Container(

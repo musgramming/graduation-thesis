@@ -224,6 +224,10 @@ province_table_layout = dbc.Card(
 # Dashboard
 # ============================================================
 
+# ============================================================
+# Dashboard
+# ============================================================
+
 dashboard_layout = html.Div(
     [
         dcc.Loading(
@@ -231,47 +235,24 @@ dashboard_layout = html.Div(
                 html.Div(
                     [
                         kpi_layout,
-
-                        html.Div(
-                            className="my-4",
-                        ),
-
+                        html.Div(className="my-4"),
+                        
                         # Histogram + statistics
                         dbc.Row(
                             [
-                                dbc.Col(
-                                    histogram_layout,
-                                    xs=12,
-                                    lg=8,
-                                ),
-
-                                dbc.Col(
-                                    statistics_layout,
-                                    xs=12,
-                                    lg=4,
-                                ),
+                                dbc.Col(histogram_layout, xs=12, lg=8),
+                                dbc.Col(statistics_layout, xs=12, lg=4),
                             ],
                             className="g-3",
                         ),
-
-                        html.Div(
-                            className="my-4",
-                        ),
-
+                        
+                        html.Div(className="my-4"),
+                        
                         # Map + province table
                         dbc.Row(
                             [
-                                dbc.Col(
-                                    map_layout,
-                                    xs=12,
-                                    lg=6,
-                                ),
-
-                                dbc.Col(
-                                    province_table_layout,
-                                    xs=12,
-                                    lg=6,
-                                ),
+                                dbc.Col(map_layout, xs=12, lg=6),
+                                dbc.Col(province_table_layout, xs=12, lg=6),
                             ],
                             className="g-3",
                         ),
@@ -280,14 +261,12 @@ dashboard_layout = html.Div(
                     className="opacity-50",
                 ),
             ],
-
             type="circle",
-
             overlay_style={
                 "visibility": "visible",
                 "filter": "blur(3px)",
             },
-
+            # Thay đổi vị trí của spinner thành absolute và neo ở phần trên của dashboard
             custom_spinner=html.Div(
                 [
                     dbc.Spinner(
@@ -295,14 +274,23 @@ dashboard_layout = html.Div(
                         type="border",
                         size="lg",
                     ),
-
                     html.H5(
                         "Đang phân tích",
-                        className="mt-3",
+                        className="mt-3 bg-white px-3 py-1 rounded shadow-sm text-dark",
                     ),
                 ],
+                style={
+                    "position": "absolute",  # Neo cố định theo khung dashboard thay vì bám theo màn hình cuộn
+                    "top": "200px",          # Cố định cách đỉnh dashboard một khoảng vừa phải
+                    "left": "50%",           # Căn giữa theo chiều ngang
+                    "transform": "translateX(-50%)", # Dịch lại để chuẩn chính giữa
+                    "z-index": 1000,
+                },
                 className="d-flex flex-column align-items-center",
             ),
         ),
-    ]
+    ],
+    style={
+        "position": "relative", # Bắt buộc để position: absolute nhận diện khung giới hạn
+    },
 )

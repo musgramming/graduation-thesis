@@ -1,14 +1,13 @@
 from pathlib import Path
 import json
 
-from utils.direction import PageDirection
+from utils.direction import GLOBAL_DIRECTION
 
 # ---------------------------------------------------------------------------
 # PAGE DIRECTION
 # ---------------------------------------------------------------------------
 
-direction = PageDirection()
-page_direction = direction.assign_page("stat-provinces-province")
+page_direction = GLOBAL_DIRECTION.assign_page("stat-provinces-province")
 
 
 

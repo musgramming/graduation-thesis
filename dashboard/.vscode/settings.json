@@ -1,5 +1,11 @@
 {
     "python.analysis.autoImportCompletions": false,
     "python.analysis.languageServerMode": "default",
-    "python.analysis.typeCheckingMode": "off"
+    "python.analysis.typeCheckingMode": "off", 
+
+    // Cấu hình riêng cho ngôn ngữ Python
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.python"
+    }
 }

@@ -3,7 +3,71 @@ from dash.exceptions import PreventUpdate
 
 from .list_of_id import pid
 from .services import calculate_province_analysis, build_histogram_figure
+from data import BANG_QUY_DOI_TINH_THANH
 from utils.exception import todo, unimplemented, unreachable
+
+
+@callback(
+    Output(pid("province-name"), "options"),
+    Output(pid("province-name"), "value"),
+    Input(pid("province-year"), "value"),
+    State(pid("province-name"), "value"),
+    State(pid("province-name"), "options"),
+)
+def update_province_options(year, current_province, current_options):
+
+    if year is None:
+        return [], None
+
+    year = str(year)
+
+    # Lấy tên tỉnh đang được chọn từ options của năm trước
+    current_province_name = next(
+        (
+            option["label"]
+            for option in (current_options or [])
+            if option["value"] == current_province
+        ),
+        None,
+    )
+
+    province_options = [
+        {
+            "label": name,
+            "value": code,
+        }
+        for code, name
+        in BANG_QUY_DOI_TINH_THANH[year].items()
+    ]
+
+    # Tìm mã của cùng tỉnh trong năm mới
+    new_province_code = next(
+        (
+            code
+            for code, name
+            in BANG_QUY_DOI_TINH_THANH[year].items()
+            if name == current_province_name
+        ),
+        None,
+    )
+
+    # Không tìm thấy → Hà Nội
+    if new_province_code is None:
+        new_province_code = next(
+            (
+                code
+                for code, name
+                in BANG_QUY_DOI_TINH_THANH[year].items()
+                if name == "Hà Nội"
+            ),
+            None,
+        )
+
+    return province_options, new_province_code
+
+
+
+
 
 @callback(
     [

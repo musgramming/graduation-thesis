@@ -81,7 +81,7 @@ left_layout = html.Div(
                                             type="number",
                                             min=2025,
                                             step=1,
-                                            value=2025,
+                                            value=2026,
                                             className="text-center",
                                         )
                                     ),

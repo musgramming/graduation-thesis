@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional, Dict, Any, Union
 
 from dash import MATCH, ALL, ALLSMALLER
@@ -14,11 +16,15 @@ class PageDirection:
     Hệ thống quản lý định danh (Registry Hub) bảo mật cao cho Dash Multi-page App.
     Sử dụng cơ chế hashing để ngăn chặn việc rò rỉ cấu trúc logic App phía Client.
     """
+
+    __pages: Dict[str, '_SingleDirection'] = {}
+
+
     def __init__(self) -> None:
         """
         Khởi tạo kho lưu trữ các trang (Page Registry).
         """
-        self.__pages: Dict[str, '_SingleDirection'] = {}
+        pass
 
 
     def __get_page_hash(self, page_name: Optional[str] = None) -> str:

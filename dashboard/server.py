@@ -4,7 +4,8 @@ from flask import Flask
 from dash import Dash
 from flask_cors import CORS
 
-from main_layout import app_layout
+from template_layout.main_layout import app_layout
+from template_layout.callback import *
 from api.access import api_bp as access_bp
 from api.not_access import api_bp as not_access_bp
 

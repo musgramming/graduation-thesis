@@ -25,3 +25,6 @@ if mode not in ("development", "production"):
 # Chọn module tương ứng dựa trên mode đã được xác thực
 PageDirection = PageDirectionSecure if mode == "production" else PageDirectionPlain
 
+
+GLOBAL_DIRECTION = PageDirection()
+__all__ = [GLOBAL_DIRECTION]

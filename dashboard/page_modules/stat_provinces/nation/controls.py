@@ -2,13 +2,15 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 from data import BANG_CHON_MON_DROPDOWN, NAM
-
-from dash import html, dcc
-import dash_bootstrap_components as dbc
-
-from data import BANG_CHON_MON_DROPDOWN
 from .list_of_id import pid
 
+
+
+
+
+# =========================================================
+#                    COMPULSORY CONTROLS
+# =========================================================
 
 compulsory_part = dbc.Card(
     [
@@ -23,39 +25,52 @@ compulsory_part = dbc.Card(
                     "Môn học",
                     html_for="nation-subject",
                 ),
-
-                dcc.Dropdown(
-                    id=pid("nation-subject"),
-                    options=BANG_CHON_MON_DROPDOWN,
-                    value="Toán",
-                    clearable=False,
-                    searchable=True,
+                html.Div(
+                    dcc.Dropdown(
+                        id=pid("nation-subject"),
+                        options=BANG_CHON_MON_DROPDOWN,
+                        value="Toán",
+                        clearable=False,
+                        searchable=True,
+                        className="comb-dropdown",
+                    ),
+                    className="comb-dropdown-wrapper mb-3"
                 ),
 
                 dbc.Label(
                     "Năm",
                     html_for="nation-year",
-                    className="mt-3",
                 ),
-
-                dcc.Dropdown(
-                    id=pid("nation-year"),
-                    options=[
-                        {
-                            "label": year,
-                            "value": year,
-                        }
-                        for year in NAM
-                    ],
-                    value="2026",
-                    clearable=False,
-                    searchable=False,
+                html.Div(
+                    dcc.Dropdown(
+                        id=pid("nation-year"),
+                        options=[
+                            {
+                                "label": year,
+                                "value": year,
+                            }
+                            for year in NAM
+                        ],
+                        value="2026",
+                        clearable=False,
+                        searchable=False,
+                        className="comb-dropdown",
+                    ),
+                    className="comb-dropdown-wrapper"
                 ),
             ],
         ),
     ],
+    className="mb-3"
 )
 
+
+
+
+
+# =========================================================
+#                     OPTIONAL CONTROLS
+# =========================================================
 
 optional_part = dbc.Card(
     [
@@ -90,6 +105,14 @@ optional_part = dbc.Card(
 )
 
 
+
+
+
+
+# =========================================================
+#                     CONTROL LAYOUT
+# =========================================================
+
 control_layout = html.Div(
     [
         html.H5(
@@ -98,8 +121,6 @@ control_layout = html.Div(
         ),
 
         compulsory_part,
-
-        html.Div(className="my-3"),
 
         optional_part,
 

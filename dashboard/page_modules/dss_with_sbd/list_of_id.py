@@ -4,14 +4,13 @@ from pathlib import Path
 import json5
 import hjson
 
-from utils.direction import PageDirection
+from utils.direction import GLOBAL_DIRECTION
 
 # ---------------------------------------------------------------------------
 # PAGE DIRECTION
 # ---------------------------------------------------------------------------
 
-direction = PageDirection()
-page_direction = direction.assign_page("sbd")
+page_direction = GLOBAL_DIRECTION.assign_page("sbd")
 
 
 # ---------------------------------------------------------------------------
