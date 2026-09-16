@@ -15,10 +15,11 @@ class PageDirection:
     thông qua Call Stack và điều phối các bộ tạo ID riêng biệt cho từng trang.
     """
 
+    __pages : dict[str, "_SingleDirection"]  = {}
 
     def __init__(self):
         # Kho lưu trữ nội bộ duy trì trạng thái ID giữa các lần nạp trang
-        self.__pages = {}
+        pass
 
 
     def assign_page(self, page: str = None):

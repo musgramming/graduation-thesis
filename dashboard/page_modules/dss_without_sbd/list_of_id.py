@@ -1,14 +1,15 @@
 from pathlib import Path
 import json
+
 from utils.direction import PageDirection
 
-
-# ============================================================================
+# ---------------------------------------------------------------------------
 # PAGE DIRECTION
-# ============================================================================
+# ---------------------------------------------------------------------------
 
 direction = PageDirection()
-page_direction = direction.assign_page("without_sbd")
+page_direction = direction.assign_page("without-sbd")
+
 
 
 # ============================================================================

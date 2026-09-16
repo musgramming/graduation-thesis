@@ -1,0 +1,19 @@
+[
+    "province-subject", 
+    "province-year", 
+    "province-name",
+    "province-options", 
+    "province-button", 
+
+    "province-rank", 
+    "province-mean",
+
+    "stat-mean",
+    "stat-median", 
+    "stat-quartiles", 
+    "stat-std", 
+    "stat-skew",
+
+    "province-histogram",
+    "dashboard-result"
+]

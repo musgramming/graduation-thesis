@@ -1,0 +1,18 @@
+[
+    "nation-subject", 
+    "nation-year", 
+    "nation-options",
+    "include_zero", 
+    "include_failed", 
+    "nation-button",
+    "nation-mean", 
+    "nation-stat-mean",  
+    "nation-stat-median",
+    "nation-stat-quartiles", 
+    "nation-stat-std", 
+    "nation-stat-skew",
+    "nation-histogram", 
+    "nation-map",
+    "nation-province-table",
+    "nation-dashboard-result"
+]

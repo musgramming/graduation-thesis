@@ -1,0 +1,57 @@
+{
+    "short-ver" : {
+        // key là tên môn học
+        // value là tên thu gọn của môn học (là các value của long-ver)
+
+        // 2 môn chính
+        "Toán" : "Toán", 
+        "Ngữ văn" : "Văn", 
+
+        // Các môn phụ & Ngoại ngữ
+        "Vật lý" : "Lí",
+        "Hóa học" : "Hóa",
+        "Sinh học" : "Sinh",
+        "Lịch sử" : "Sử",
+        "Địa lý" : "Địa",
+        "Giáo dục kinh tế và pháp luật" : "Giáo dục kinh tế và pháp luật",
+        "Công nghệ công nghiệp" : "Công nghệ công nghiệp",
+        "Công nghệ nông nghiệp" : "Công nghệ nông nghiệp",
+        "Tin học" : "Tin",
+        "Tiếng Anh" : "Anh",
+        "Tiếng Pháp" : "Pháp",
+        "Tiếng Đức" : "Đức",
+        "Tiếng Nga" : "Nga",
+        "Tiếng Nhật" : "Nhật",
+        "Tiếng Hàn" : "Hàn",
+        "Tiếng Trung" : "Trung"
+    }, 
+
+
+    
+    // Cái này dành cho các dropdown
+    "long-ver" : [
+        // Danh sách label phải chứa tên đầy đủ của các môn trong value
+        // Danh sách value phải chứa: Lí, Hóa, Sinh, Sử, Địa, Giáo dục kinh tế và pháp luật, Công nghệ công nghiệp, Công nghệ nông nghiệp, Tin, Anh, Pháp, Đức, Nga, Nhật, Hàn, Trung
+        
+        // 2 môn chính
+        {"label" : "Toán", "value" : "Toán"}, 
+        {"label" : "Ngữ văn", "value" : "Văn"}, 
+        
+        // Các môn phụ
+        {"label" : "Vật lý", "value" : "Lí"},
+        {"label" : "Hóa học", "value" : "Hóa"},
+        {"label" : "Sinh học", "value" : "Sinh"},
+        {"label" : "Lịch sử", "value" : "Sử"},
+        {"label" : "Địa lý", "value" : "Địa"},
+        {"label" : "Giáo dục kinh tế và pháp luật", "value" : "Giáo dục kinh tế và pháp luật"},
+        {"label" : "Công nghệ công nghiệp", "value" : "Công nghệ công nghiệp"},
+        {"label" : "Công nghệ nông nghiệp", "value" : "Công nghệ nông nghiệp"},
+        {"label" : "Tiếng Anh", "value" : "Anh"},
+        {"label" : "Tiếng Pháp", "value" : "Pháp"},
+        {"label" : "Tiếng Đức", "value" : "Đức"},
+        {"label" : "Tiếng Nga", "value" : "Nga"},
+        {"label" : "Tiếng Nhật", "value" : "Nhật"},
+        {"label" : "Tiếng Trung", "value" : "Trung"},
+        {"label" : "Tiếng Hàn", "value" : "Hàn"}
+    ]
+}
