@@ -8,11 +8,23 @@
     "province-rank", 
     "province-mean",
 
+    "stat-count",
     "stat-mean",
     "stat-median", 
     "stat-quartiles", 
     "stat-std", 
     "stat-skew",
+
+    "stat-ge-9",
+    "stat-9-0",
+    "stat-9-25",
+    "stat-9-5",
+    "stat-9-75",
+    "stat-10-0",
+
+    "stat-failed",
+    "stat-below-5",
+    "stat-zero",
 
     "province-histogram",
     "dashboard-result"

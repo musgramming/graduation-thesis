@@ -284,7 +284,7 @@ dashboard_layout = html.Div(
                     "top": "200px",          # Cố định cách đỉnh dashboard một khoảng vừa phải
                     "left": "50%",           # Căn giữa theo chiều ngang
                     "transform": "translateX(-50%)", # Dịch lại để chuẩn chính giữa
-                    "z-index": 1000,
+                    "zIndex": 1000,
                 },
                 className="d-flex flex-column align-items-center",
             ),

@@ -1,30 +1,13 @@
-import os
-from dotenv import load_dotenv
-
 from .engines.direction_plain import PageDirection as PageDirectionPlain
 from .engines.direction_secure import PageDirection as PageDirectionSecure
-from .exception import DashModeException
 
-load_dotenv()
+from ..read_mode import get_standardized_mode
 
-
-
-# Cho phép linh hoạt nhận diện biến môi trường, ưu tiên DASH_MODE hoặc MODE
-mode = os.getenv("DASH_MODE") or os.getenv("MODE") or os.getenv("FLASK_ENV", "development")
-mode = mode.lower().strip()
-
-
-
-# Fail-fast: Báo lỗi ngay lập tức thay vì chạy ngầm với cấu hình sai lệch
-if mode not in ("development", "production"):
-    raise DashModeException(
-        f"Lỗi cấu hình: Biến môi trường chế độ ('{mode}') không hợp lệ. "
-        "Chỉ chấp nhận giá trị 'development' hoặc 'production'."
-    )
+mode = get_standardized_mode()
 
 # Chọn module tương ứng dựa trên mode đã được xác thực
 PageDirection = PageDirectionSecure if mode == "production" else PageDirectionPlain
 
 
 GLOBAL_DIRECTION = PageDirection()
-__all__ = [GLOBAL_DIRECTION]
+__all__ = ["GLOBAL_DIRECTION"]

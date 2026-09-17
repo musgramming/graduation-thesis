@@ -1,44 +1,67 @@
-/* --- FIX TRIỆT ĐỂ DROPDOWN DASH --- */
+/* =========================================================
+   FIX TRIỆT ĐỂ LỖI DROPDOWN DASH & TẠO GIAO DIỆN HIỆN ĐẠI
+   ========================================================= */
 
-/* --- ĐẢM BẢO CARD 1 LUÔN NẰM TRÊN CARD 2 --- */
-.col-md-4 .card:first-of-type {
-    position: relative !important;
-    z-index: 50 !important;
-}
-
-.col-md-4 .card:nth-of-type(2) {
-    position: relative !important;
-    z-index: 1 !important;
-}
-
-/* 1. Đảm bảo toàn bộ các lớp bọc không bị che khuất và tạo mốc tọa độ relative */
-.col-md-4 .card, 
-.col-md-4 .card-body {
+/* 1. Đảm bảo vùng chứa sidebar và cột không bị ẩn nội dung tràn ra ngoài */
+.col-md-4, .row, .card, .card-body {
     overflow: visible !important;
 }
 
-.comb-dropdown-wrapper {
-    position: relative !important;
-    overflow: visible !important;
+/* 2. Tùy chỉnh ô input chính của dcc.Dropdown cho mềm mại, bo góc chuẩn Bootstrap 5 */
+.comb-dropdown .Select-control,
+.comb-dropdown .css-1s2u09g-control,
+.comb-dropdown .css-2b097c-control {
+    border-radius: 8px !important;
+    border-color: #dee2e6 !important;
+    min-height: 38px !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-/* 2. Cố định menu của dcc.Dropdown nằm gọn ngay dưới ô input */
+/* Hiệu ứng khi rê chuột hoặc click vào ô input dropdown */
+.comb-dropdown .Select-control:hover,
+.comb-dropdown .css-1s2u09g-control:hover,
+.comb-dropdown-wrapper .dcc-dropdown:focus-within .Select-control {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+}
+
+/* 3. Định vị và định dạng khung menu xổ xuống (Dropdown Menu) */
 .Select-menu-outer,
-.VirtualizedSelect-menu-outer {
+.VirtualizedSelect-menu-outer,
+div[class$="-menu"],
+div[class*="-menu "] {
     position: absolute !important;
     top: 100% !important;
     left: 0 !important;
     width: 100% !important;
-    z-index: 99999 !important;
-    max-height: 220px !important;
+    z-index: 999999 !important; /* Đẩy lớp hiển thị lên trên cùng tuyệt đối */
+    max-height: 250px !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
-    border-radius: 10px !important;
-    border: 1px solid #ced4da !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
     background-color: #ffffff !important;
     margin-top: 4px !important;
+    padding: 4px 0 !important;
 }
 
-.comb-dropdown {
-    position: relative;
-    z-index: 1050;
+/* 4. Tùy chỉnh từng dòng lựa chọn (Option) bên trong menu */
+.Select-option,
+div[class$="-option"],
+div[class*="-option "] {
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    color: #212529 !important;
+    background-color: transparent !important;
+    cursor: pointer !important;
+}
+
+/* Hiệu ứng khi rê chuột vào một dòng lựa chọn */
+.Select-option:hover,
+div[class$="-option"]:hover,
+div[class$="-option"].is-focused,
+div[class*="-option"][aria-selected="true"] {
+    background-color: #f8f9fa !important;
+    color: #0d6efd !important;
 }

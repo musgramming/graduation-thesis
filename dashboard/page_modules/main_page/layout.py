@@ -180,6 +180,9 @@ layout = html.Div([
                     ),
 
 
+
+
+
                     # =========================================
                     # FEATURE 2
                     # =========================================
@@ -227,6 +230,60 @@ layout = html.Div([
                         md=6,
                         className="mb-4"
                     ),
+
+
+
+
+
+                    # =========================================
+                    # FEATURE 3
+                    # =========================================
+
+                    dbc.Col(
+                        [
+                            dbc.Card(
+                                dbc.CardBody(
+                                    [
+                                        html.Div(
+                                            html.I(
+                                                className="bi bi-map-fill text-warning",
+                                                style={"fontSize": "3rem"}
+                                            ),
+                                            className="mb-3"
+                                        ),
+
+                                        html.H3(
+                                            "Thống kê theo Tỉnh thành",
+                                            className="fw-bold mb-3"
+                                        ),
+
+                                        html.P(
+                                            "Cung cấp bức tranh toàn cảnh về chất lượng giáo dục qua phổ điểm "
+                                            "từng môn học theo từng tỉnh/thành phố. So sánh điểm trung bình "
+                                            "và phân hóa kết quả học tập giữa các địa phương trên toàn quốc.",
+                                            className="text-secondary mb-4"
+                                        ),
+
+                                        dbc.Button(
+                                            "Xem bản đồ/thống kê 📊",
+                                            href="/stat",
+                                            color="warning",
+                                            className="w-100 py-2 fw-semibold shadow-sm text-dark",
+                                            style={
+                                                "borderRadius": "14px",
+                                                "transition": "all 0.2s ease"
+                                            }
+                                        )
+                                    ]
+                                ),
+                                className="h-100 border-0 shadow-sm rounded-4 p-3"
+                            )
+                        ],
+                        md=4,
+                        className="mb-4"
+                    ),
+
+
                 ],
                 className="g-4"
             )

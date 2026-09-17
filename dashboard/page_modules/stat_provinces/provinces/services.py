@@ -90,6 +90,23 @@ def build_statistics_query(
             pl.col(subject)
             .skew()
             .alias("skew"),
+
+            # --- CÁC CHỈ SỐ BỔ SUNG ---
+            # Số lượng bài >= 9.0
+            pl.col(subject).filter(pl.col(subject) >= 9.0).count().alias("ge_9"),
+
+
+            # Số lượng bài điểm cao
+            pl.col(subject).filter((9.0 <= pl.col(subject)) & ((pl.col(subject) < 9.25))).count().alias("score_9_0"),
+            pl.col(subject).filter((9.25 <= pl.col(subject)) & ((pl.col(subject) < 9.5))).count().alias("score_9_25"),
+            pl.col(subject).filter((9.5 <= pl.col(subject)) & ((pl.col(subject) < 9.75))).count().alias("score_9_5"),
+            pl.col(subject).filter((9.75 <= pl.col(subject)) & ((pl.col(subject) < 10))).count().alias("score_9_75"),
+            pl.col(subject).filter(pl.col(subject) == 10.0).count().alias("score_10_0"),
+
+            # --- NHÓM RỦI RO / ĐIỂM THẤP ---
+            pl.col(subject).filter(pl.col(subject) <= 1.0).count().alias("score_failed"),     # Điểm liệt
+            pl.col(subject).filter(pl.col(subject) < 5.0).count().alias("score_below_5"),     # Dưới trung bình
+            pl.col(subject).filter(pl.col(subject) == 0.0).count().alias("score_zero"),       # Điểm 0 tuyệt đối
         ]
     )
 

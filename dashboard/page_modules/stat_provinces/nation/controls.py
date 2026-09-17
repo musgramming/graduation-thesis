@@ -59,9 +59,17 @@ compulsory_part = dbc.Card(
                     className="comb-dropdown-wrapper"
                 ),
             ],
+            # 1. Bật hiển thị tràn nội dung cho phần thân Card
+            style={"overflow": "visible"} 
         ),
     ],
-    className="mb-3"
+    # 2. Đưa z-index lên cao và bật overflow visible cho thẻ Card này
+    className="mb-3 shadow-sm",
+    style={
+        "zIndex": 10, 
+        "position": "relative", 
+        "overflow": "visible"
+    }
 )
 
 

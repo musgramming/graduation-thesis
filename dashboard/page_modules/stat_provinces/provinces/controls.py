@@ -9,9 +9,6 @@ from data import (
 from .list_of_id import pid
 
 
-
-
-
 # =========================================================
 #                    COMPULSORY CONTROLS
 # =========================================================
@@ -19,18 +16,20 @@ from .list_of_id import pid
 compulsory_part = dbc.Card(
     [
         dbc.CardHeader(
-            "Bắt buộc",
-            className="fw-semibold",
+            [
+                html.I(className="bi bi-filter-circle me-2 text-primary"),
+                html.Span("Bắt buộc", className="fw-semibold")
+            ],
+            className="bg-white border-bottom py-3",
         ),
 
-        # Thêm overflow-visible hoặc dùng chung cấu trúc CSS .card-body của bạn
         dbc.CardBody(
             [
                 dbc.Label(
                     "Môn học",
                     html_for="province-subject",
+                    className="small fw-medium text-secondary",
                 ),
-                # Bọc dcc.Dropdown vào div có class wrapper để định vị menu tuyệt đối
                 html.Div(
                     dcc.Dropdown(
                         id=pid("province-subject"),
@@ -46,6 +45,7 @@ compulsory_part = dbc.Card(
                 dbc.Label(
                     "Năm",
                     html_for="province-year",
+                    className="small fw-medium text-secondary",
                 ),
                 html.Div(
                     dcc.Dropdown(
@@ -72,6 +72,7 @@ compulsory_part = dbc.Card(
                 dbc.Label(
                     "Tỉnh thành",
                     html_for="province-name",
+                    className="small fw-medium text-secondary",
                 ),
                 html.Div(
                     dcc.Dropdown(
@@ -85,25 +86,33 @@ compulsory_part = dbc.Card(
                     className="comb-dropdown-wrapper"
                 ),
             ],
+            style={"overflow": "visible"} 
         ),
     ],
-    className="mb-3" # Thêm khoảng cách nếu cần
+    # Thêm bo góc mềm mại border-0 và bóng nhẹ shadow-sm
+    className="mb-3 shadow-sm border-0 rounded-4",
+    style={
+        "zIndex": 10, 
+        "position": "relative", 
+        "overflow": "visible"
+    }
 )
 
 
 
 
-
-
 # =========================================================
-#                     OPTIONAL CONTROLS
+#                    OPTIONAL CONTROLS
 # =========================================================
 
 optional_part = dbc.Card(
     [
         dbc.CardHeader(
-            "Tùy chọn",
-            className="fw-semibold",
+            [
+                html.I(className="bi bi-sliders me-2 text-secondary"),
+                html.Span("Tùy chọn", className="fw-semibold")
+            ],
+            className="bg-white border-bottom py-3",
         ),
 
         dbc.CardBody(
@@ -125,38 +134,45 @@ optional_part = dbc.Card(
                         "include_failed",
                     ],
                     switch=True,
+                    className="small text-secondary",
                 ),
             ],
         ),
     ],
+    className="shadow-sm border-0 rounded-4 mb-4",
+    style={
+        "zIndex": 1, 
+        "position": "relative"
+    }
 )
 
 
-
-
-
 # =========================================================
-#                     CONTROL LAYOUT
+#                    CONTROL LAYOUT
 # =========================================================
 
 control_layout = html.Div(
     [
-        html.H5(
-            "Thiết lập",
-            className="fw-bold mb-3",
+        html.Div(
+            [
+                html.I(className="bi bi-gear-fill me-2 text-primary"),
+                html.H5("Thiết lập", className="fw-bold mb-0 text-dark", style={"display": "inline-block"})
+            ],
+            className="d-flex align-items-center mb-3 px-1"
         ),
 
         compulsory_part,
 
         optional_part,
 
-        html.Div(className="my-3"),
-
         dbc.Button(
-            "Tính toán",
+            [
+                html.I(className="bi bi-calculator me-2"),
+                "Tính toán"
+            ],
             id=pid("province-button"),
             color="primary",
-            className="w-100",
+            className="w-100 py-2 fw-semibold shadow-sm rounded-pill",
         ),
     ]
 )

@@ -3,6 +3,8 @@
     "python.analysis.languageServerMode": "default",
     "python.analysis.typeCheckingMode": "off", 
 
+    "python.terminal.useEnvFile": true,
+
     // Cấu hình riêng cho ngôn ngữ Python
     "[python]": {
         "editor.formatOnSave": true,

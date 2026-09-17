@@ -14,6 +14,10 @@ from .provinces import (
     dashboard_layout as provinces_dashboard_layout,
 )
 
+
+
+
+
 layout = dbc.Container(
     [
         dbc.Row(
@@ -22,16 +26,16 @@ layout = dbc.Container(
                     dbc.Tabs(
                         children=[
                             dbc.Tab(
-                                label="Tỉnh thành",
-                                tab_id="provinces",
+                                label="Thống kê theo cả nước",
+                                tab_id="nation",
                             ),
                             dbc.Tab(
-                                label="Cả nước",
-                                tab_id="nation",
+                                label="Thống kê theo tỉnh thành",
+                                tab_id="provinces",
                             ),
                         ],
                         id=pid("type-of-tab"),
-                        active_tab="provinces",
+                        active_tab="nation",
                     ),
                     width=12,
                 ),
@@ -83,3 +87,5 @@ def use_tab(tab):
 
         case _:
             unreachable("Không tới được đoạn này")
+
+    unreachable("Không tới được đoạn này")
