@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 def get_standardized_mode() -> str:
     """
@@ -12,6 +12,7 @@ def get_standardized_mode() -> str:
     raw_mode = (
         os.getenv("DASH_MODE") 
         or os.getenv("MODE") 
+        or os.getenv("mode")
         or os.getenv("FLASK_ENV") 
         or "development"
     )

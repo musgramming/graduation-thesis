@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import lru_cache
 from typing import Literal
 
 from dash import html, dcc, dash_table
@@ -249,6 +250,7 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
 
 
 
+@lru_cache(maxsize=32)
 def display_graph_and_table(
     year: int, 
     self_score : float, 

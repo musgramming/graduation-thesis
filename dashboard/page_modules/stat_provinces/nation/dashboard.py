@@ -251,7 +251,7 @@ dashboard_layout = html.Div(
                         # Map + province table
                         dbc.Row(
                             [
-                                dbc.Col(map_layout, xs=12, lg=6),
+                                dbc.Col(map_layout, xs=12, lg=6, className="d-none d-lg-block"),
                                 dbc.Col(province_table_layout, xs=12, lg=6),
                             ],
                             className="g-3",

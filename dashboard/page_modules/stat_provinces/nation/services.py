@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 import polars as pl
 
 from data import (
@@ -266,6 +267,10 @@ def _calculate_histogram(
     return histogram
 
 
+
+
+
+@lru_cache(maxsize=32)
 def calculate_nation_analysis(
     year: str,
     subject: str,
