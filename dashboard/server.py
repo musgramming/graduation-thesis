@@ -1,13 +1,19 @@
 import os
+import logging
 from dotenv import load_dotenv
 from flask import Flask
 from dash import Dash
 from flask_cors import CORS
+from waitress import serve
 
 from template_layout.main_layout import app_layout
 from template_layout.callback import *
 from api.access import api_bp as access_bp
 from api.not_access import api_bp as not_access_bp
+from utils.exception import unreachable
+
+
+logging.getLogger('waitress.queue').setLevel(logging.ERROR)
 
 
 server = Flask(__name__)
@@ -56,8 +62,26 @@ if __name__ == "__main__":
         case _:
             debug = False
 
-    app.run(
-        host=host,
-        port=port,
-        debug=debug,
-    )
+    if debug == True: 
+        print(f"-> Đang khởi động Waitress server tại http://{host}:{port} ...")
+        app.run(
+            host = host, 
+            port = port, 
+            debug = debug
+        )
+        print("Đã tắt Dash server!")
+
+    elif debug == False:
+        try: 
+            print(f"-> Đang khởi động Waitress server tại http://{host}:{port} ...")
+            serve(
+                app.server, 
+                host = host, 
+                port = port, 
+                threads = 8
+            )
+        except KeyboardInterrupt:
+            print("Đã tắt Waitress server!")
+
+    else:
+        unreachable("Debug là None rồi!")
