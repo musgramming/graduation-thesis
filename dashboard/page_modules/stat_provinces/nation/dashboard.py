@@ -1,6 +1,7 @@
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from .list_of_id import pid
+from utils.graph import create_empty_figure
 
 
 # ============================================================
@@ -128,7 +129,7 @@ histogram_layout = dbc.Card(
         dbc.CardBody(
             dcc.Graph(
                 id=pid("nation-histogram"),
-                figure={},
+                figure=create_empty_figure(""),
                 config={
                     "displayModeBar": False,
                 },
@@ -153,7 +154,7 @@ map_layout = dbc.Card(
         dbc.CardBody(
             dcc.Graph(
                 id=pid("nation-map"),
-                figure={},
+                figure=create_empty_figure(""),
                 config={
                     "displayModeBar": False,
                 },

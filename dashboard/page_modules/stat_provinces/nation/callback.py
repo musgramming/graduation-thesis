@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+import traceback
 
-from dash import callback, Input, Output, State
+from dash import callback, Input, Output, State, no_update
 from dash.exceptions import PreventUpdate
 import plotly.express as px
 import polars as pl
@@ -160,6 +161,9 @@ def _build_province_map(
     return fig
 
 
+
+
+
 @callback(
     Output(pid("nation-mean"), "children"),
     Output(pid("nation-stat-mean"), "children"),
@@ -190,113 +194,131 @@ def update_nation_dashboard(
     if not n_clicks:
         raise PreventUpdate
 
-    if subject is None or year is None:
-        raise PreventUpdate
 
-    options = options or []
 
-    include_zero = "include_zero" in options
-    include_failed = "include_failed" in options
+    # -------------------------------------------------------------
+    # Phần thống kê chính   
+    # -------------------------------------------------------------
+    def _main_stats():
+        nonlocal options
+        if subject is None or year is None:
+            raise PreventUpdate
 
-    # =========================================================
-    # CHẠY PHÂN TÍCH
-    # =========================================================
-    result = calculate_nation_analysis(
-        year=str(year),
-        subject=subject,
-        include_zero=include_zero,
-        include_failed=include_failed,
-    )
+        options = options or []
 
-    statistics = result["statistics"]
-    province_statistics = result["province_statistics"]
-    histogram = result["histogram"]
+        include_zero = "include_zero" in options
+        include_failed = "include_failed" in options
 
-    # =========================================================
-    # KPI
-    # =========================================================
-    nation_mean = _format_number(
-        statistics["mean"]
-    )
-
-    # =========================================================
-    # STATISTICS
-    # =========================================================
-    stat_mean = _format_number(
-        statistics["mean"]
-    )
-
-    stat_median = _format_number(
-        statistics["median"]
-    )
-
-    stat_quartiles = (
-        f"{_format_number(statistics['q1'])}"
-        f" - "
-        f"{_format_number(statistics['q3'])}"
-    )
-
-    stat_std = _format_number(
-        statistics["std"]
-    )
-
-    stat_skew = _format_number(
-        statistics["skew"]
-    )
-
-    # =========================================================
-    # HISTOGRAM
-    # =========================================================
-    histogram_figure = _build_histogram(
-        histogram=histogram,
-    )
-
-    # =========================================================
-    # MAP
-    # =========================================================
-    province_map = _build_province_map(
-        province_statistics
-    )
-
-    # =========================================================
-    # TABLE
-    # =========================================================
-    #
-    # Giữ key nội bộ:
-    # rank
-    # _province_name
-    # mean
-    # median
-    #
-    # DataTable sẽ chịu trách nhiệm hiển thị tên tiếng Việt.
-    #
-    province_table = (
-        province_statistics
-        .select(
-            [
-                pl.col("rank").alias("Xếp hạng"),
-                pl.col("_province_name").alias("Tỉnh thành"),
-                pl.col("mean").round(2).cast(pl.Decimal(5, 2)).alias("Điểm trung bình"),
-                pl.col("median").round(2).cast(pl.Decimal(5, 2)).alias("Trung vị"),
-            ]
+        # =========================================================
+        # CHẠY PHÂN TÍCH
+        # =========================================================
+        result = calculate_nation_analysis(
+            year=str(year),
+            subject=subject,
+            include_zero=include_zero,
+            include_failed=include_failed,
         )
-        .to_dicts()
-    )
 
-    # =========================================================
-    # HIỂN THỊ DASHBOARD
-    # =========================================================
-    dashboard_class = "opacity-100"
+        statistics = result["statistics"]
+        province_statistics = result["province_statistics"]
+        histogram = result["histogram"]
 
-    return (
-        nation_mean,
-        stat_mean,
-        stat_median,
-        stat_quartiles,
-        stat_std,
-        stat_skew,
-        histogram_figure,
-        province_map,
-        province_table,
-        dashboard_class,
-    )
+        # =========================================================
+        # KPI
+        # =========================================================
+        nation_mean = _format_number(
+            statistics["mean"]
+        )
+
+        # =========================================================
+        # STATISTICS
+        # =========================================================
+        stat_mean = _format_number(
+            statistics["mean"]
+        )
+
+        stat_median = _format_number(
+            statistics["median"]
+        )
+
+        stat_quartiles = (
+            f"{_format_number(statistics['q1'])}"
+            f" - "
+            f"{_format_number(statistics['q3'])}"
+        )
+
+        stat_std = _format_number(
+            statistics["std"]
+        )
+
+        stat_skew = _format_number(
+            statistics["skew"]
+        )
+
+        # =========================================================
+        # HISTOGRAM
+        # =========================================================
+        histogram_figure = _build_histogram(
+            histogram=histogram,
+        )
+
+        # =========================================================
+        # MAP
+        # =========================================================
+        province_map = _build_province_map(
+            province_statistics
+        )
+
+        # =========================================================
+        # TABLE
+        # =========================================================
+        #
+        # Giữ key nội bộ:
+        # rank
+        # _province_name
+        # mean
+        # median
+        #
+        # DataTable sẽ chịu trách nhiệm hiển thị tên tiếng Việt.
+        #
+        province_table = (
+            province_statistics
+            .select(
+                [
+                    pl.col("rank").alias("Xếp hạng"),
+                    pl.col("_province_name").alias("Tỉnh thành"),
+                    pl.col("mean").round(2).cast(pl.Decimal(5, 2)).alias("Điểm trung bình"),
+                    pl.col("median").round(2).cast(pl.Decimal(5, 2)).alias("Trung vị"),
+                ]
+            )
+            .to_dicts()
+        )
+
+        # =========================================================
+        # HIỂN THỊ DASHBOARD
+        # =========================================================
+        dashboard_class = "opacity-100"
+
+        return (
+            nation_mean,
+            stat_mean,
+            stat_median,
+            stat_quartiles,
+            stat_std,
+            stat_skew,
+            histogram_figure,
+            province_map,
+            province_table,
+            dashboard_class,
+        )
+
+
+    try: 
+        return _main_stats()
+    except:
+        print("--- LỖI XẢY RA TRONG CALLBACK ---")
+        traceback.print_exc()
+        print("---------------------------------")
+        return no_update
+
+    

@@ -1,17 +1,13 @@
 import plotly.graph_objects as go
-
 from .exception import todo, unimplemented, unreachable
+
+
+
 
 def build_strict_graph(fig: go.Figure) -> go.Figure:
     """
     Chuẩn hóa giao diện cho biểu đồ Plotly theo phong cách tối giản, 
     chuyên nghiệp và đồng bộ trên toàn hệ thống Dashboard.
-
-    Args:
-        fig (go.Figure): Đối tượng biểu đồ Plotly cần định dạng.
-
-    Returns:
-        go.Figure: Biểu đồ sau khi được cập nhật layout.
     """
     fig.update_layout(
         template="plotly_white",
@@ -37,7 +33,6 @@ def build_strict_graph(fig: go.Figure) -> go.Figure:
         )
     )
     
-    # Chuẩn hóa đường lưới (grid) nhạt hơn để không rối mắt
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
@@ -56,4 +51,32 @@ def build_strict_graph(fig: go.Figure) -> go.Figure:
         zerolinecolor="#dee2e6"
     )
 
+    return fig
+
+
+
+
+
+def create_empty_figure(message="Không có dữ liệu phù hợp") -> go.Figure:
+    """Tạo một biểu đồ trống nhưng có chữ thông báo ở giữa"""
+    fig = go.Figure()
+    
+    # 1. Chạy chuẩn hóa layout chung trước
+    fig = build_strict_graph(fig)
+    
+    # 2. Sau đó mới ẩn trục tọa độ đi để biểu đồ trống hoàn toàn sạch sẽ
+    fig.update_xaxes(visible=False, showgrid=False)
+    fig.update_yaxes(visible=False, showgrid=False)
+    
+    # 3. Thêm chữ thông báo vào giữa biểu đồ
+    fig.add_annotation(
+        text=message,
+        xref="paper", 
+        yref="paper",
+        x=0.5, 
+        y=0.5,
+        showarrow=False,
+        font=dict(size=14, color="#6c757d")
+    )
+    
     return fig

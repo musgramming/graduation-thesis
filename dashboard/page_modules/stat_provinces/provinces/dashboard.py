@@ -1,6 +1,9 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+
 from .list_of_id import pid
+
+from utils.graph import create_empty_figure
 
 
 
@@ -213,7 +216,7 @@ tier_3_histogram = dbc.Card(
         dbc.CardBody(
             dcc.Graph(
                 id=pid("province-histogram"),
-                figure={},
+                figure=create_empty_figure(""),
                 config={"displayModeBar": False},
                 style={"height": "380px"},
             ),
