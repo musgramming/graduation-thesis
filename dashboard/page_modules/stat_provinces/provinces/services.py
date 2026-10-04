@@ -23,34 +23,26 @@ def add_province_code(
     )
 
 
+
+
+
 def apply_score_filters(
-    lf: pl.LazyFrame,
-    subject: str,
-    include_zero: bool,
-    include_failed: bool,
-) -> pl.LazyFrame:
-    """
-    Áp dụng các điều kiện lọc chung.
-    """
+    lf,
+    subject,
+    include_zero,
+    include_failed,
+):
+    lf = lf.filter(pl.col(subject).is_not_null())
 
-    # Không tính các bản ghi không có điểm môn đang xét
-    lf = lf.filter(
-        pl.col(subject).is_not_null()
-    )
-
-    # Mặc định chỉ tính thí sinh đủ điều kiện tốt nghiệp
     if not include_failed:
-        lf = lf.filter(
-            pl.col("is_eligible")
-        )
+        lf = lf.filter(pl.col("is_eligible"))
 
-    # Mặc định không tính điểm 0
     if not include_zero:
-        lf = lf.filter(
-            pl.col(subject) > 0
-        )
+        lf = lf.filter(pl.col(subject) > 0)
 
     return lf
+
+
 
 
 
@@ -58,57 +50,43 @@ def build_statistics_query(
     province_lf: pl.LazyFrame,
     subject: str,
 ) -> pl.LazyFrame:
-    """
-    Tạo LazyFrame tính các giá trị thống kê
-    cho tỉnh đang được chọn.
-    """
+    score = pl.col(subject)
 
-    return province_lf.select(
-        [
-            pl.col(subject).count().alias("count"),
+    return province_lf.select([
+        score.count().alias("count"),
+        score.mean().alias("mean"),
+        score.median().alias("median"),
+        score.quantile(0.25).alias("q1"),
+        score.quantile(0.75).alias("q3"),
+        score.std().alias("std"),
+        score.skew().alias("skew"),
 
-            pl.col(subject)
-            .mean()
-            .alias("mean"),
+        (score >= 9.0).sum().alias("ge_9"),
 
-            pl.col(subject)
-            .median()
-            .alias("median"),
+        ((score >= 9.0) & (score < 9.25))
+            .sum()
+            .alias("score_9_0"),
 
-            pl.col(subject)
-            .quantile(0.25)
-            .alias("q1"),
+        ((score >= 9.25) & (score < 9.5))
+            .sum()
+            .alias("score_9_25"),
 
-            pl.col(subject)
-            .quantile(0.75)
-            .alias("q3"),
+        ((score >= 9.5) & (score < 9.75))
+            .sum()
+            .alias("score_9_5"),
 
-            pl.col(subject)
-            .std()
-            .alias("std"),
+        ((score >= 9.75) & (score < 10.0))
+            .sum()
+            .alias("score_9_75"),
 
-            pl.col(subject)
-            .skew()
-            .alias("skew"),
+        (score == 10.0).sum().alias("score_10_0"),
 
-            # --- CÁC CHỈ SỐ BỔ SUNG ---
-            # Số lượng bài >= 9.0
-            pl.col(subject).filter(pl.col(subject) >= 9.0).count().alias("ge_9"),
+        (score <= 1.0).sum().alias("score_failed"),
+        (score < 5.0).sum().alias("score_below_5"),
+        (score == 0.0).sum().alias("score_zero"),
+    ])
 
 
-            # Số lượng bài điểm cao
-            pl.col(subject).filter((9.0 <= pl.col(subject)) & ((pl.col(subject) < 9.25))).count().alias("score_9_0"),
-            pl.col(subject).filter((9.25 <= pl.col(subject)) & ((pl.col(subject) < 9.5))).count().alias("score_9_25"),
-            pl.col(subject).filter((9.5 <= pl.col(subject)) & ((pl.col(subject) < 9.75))).count().alias("score_9_5"),
-            pl.col(subject).filter((9.75 <= pl.col(subject)) & ((pl.col(subject) < 10))).count().alias("score_9_75"),
-            pl.col(subject).filter(pl.col(subject) == 10.0).count().alias("score_10_0"),
-
-            # --- NHÓM RỦI RO / ĐIỂM THẤP ---
-            pl.col(subject).filter(pl.col(subject) <= 1.0).count().alias("score_failed"),     # Điểm liệt
-            pl.col(subject).filter(pl.col(subject) < 5.0).count().alias("score_below_5"),     # Dưới trung bình
-            pl.col(subject).filter(pl.col(subject) == 0.0).count().alias("score_zero"),       # Điểm 0 tuyệt đối
-        ]
-    )
 
 
 
@@ -175,6 +153,8 @@ def build_histogram_query(
 
 
 
+
+
 def calculate_province_analysis(
     year: int,
     subject: str,
@@ -182,23 +162,16 @@ def calculate_province_analysis(
     include_zero: bool,
     include_failed: bool,
 ):
-    """
-    Tính toàn bộ dữ liệu cần thiết cho dashboard.
-
-    Chỉ thực hiện một lần collect().
-    """
-
-    # -----------------------------------------
-    # Base LazyFrame
-    # -----------------------------------------
-
-    lf = add_province_code(
+    lf = (
         BANG_DIEM[year]
+        .select([
+            "SOBAODANH",
+            "is_eligible",
+            subject,
+        ])
     )
 
-    # -----------------------------------------
-    # Apply filters
-    # -----------------------------------------
+    lf = add_province_code(lf)
 
     lf = apply_score_filters(
         lf=lf,
@@ -207,17 +180,9 @@ def calculate_province_analysis(
         include_failed=include_failed,
     )
 
-    # -----------------------------------------
-    # Dữ liệu tỉnh được chọn
-    # -----------------------------------------
-
     province_lf = lf.filter(
         pl.col(PROVINCE_CODE_COLUMN) == province
     )
-
-    # -----------------------------------------
-    # Các query
-    # -----------------------------------------
 
     statistics_query = build_statistics_query(
         province_lf,
@@ -234,57 +199,31 @@ def calculate_province_analysis(
         subject,
     )
 
-    # -----------------------------------------
-    # COLLECT
-    # -----------------------------------------
+    statistics, ranking, histogram = pl.collect_all([
+        statistics_query,
+        ranking_query,
+        histogram_query,
+    ])
 
-    statistics, ranking, histogram = pl.collect_all(
-        [
-            statistics_query,
-            ranking_query,
-            histogram_query,
-        ]
-    )
+    statistics = statistics.row(0, named=True)
 
-    # -----------------------------------------
-    # Statistics
-    # -----------------------------------------
-
-    statistics = statistics.row(
-        0,
-        named=True,
-    )
-
-    # -----------------------------------------
-    # Ranking
-    # -----------------------------------------
-
-    selected_rank = (
-        ranking
-        .filter(
-            pl.col(PROVINCE_CODE_COLUMN) == province
-        )
+    selected_rank = ranking.filter(
+        pl.col(PROVINCE_CODE_COLUMN) == province
     )
 
     if selected_rank.height:
-        rank = int(
-            selected_rank["rank"][0]
-        )
+        rank = int(selected_rank["rank"][0])
     else:
         rank = None
-
-    total_provinces = ranking.height
-
-    # -----------------------------------------
-    # Return
-    # -----------------------------------------
 
     return {
         "statistics": statistics,
         "rank": rank,
-        "total_provinces": total_provinces,
+        "total_provinces": ranking.height,
         "histogram": histogram,
     }
+
+
 
 
 

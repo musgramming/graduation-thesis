@@ -1,61 +1,49 @@
 from __future__ import annotations
 
-import json
+import time
 import traceback
+
+import polars as pl
+import plotly.express as px
 
 from dash import callback, Input, Output, State, no_update
 from dash.exceptions import PreventUpdate
-import plotly.express as px
-import polars as pl
 
-from data import BAN_DO_HANH_CHINH
-
+from data import BAN_DO_HANH_CHINH_GEOJSON
 from .services import calculate_nation_analysis
 from .list_of_id import pid
+
+
+
 
 
 def _format_number(
     value,
     digits: int = 2,
 ) -> str:
-    """
-    Format số để hiển thị trên dashboard.
-    """
-
     if value is None:
         return "--"
-
     return f"{value:.{digits}f}"
 
 
-def _build_histogram(
-    histogram
-):
+
+
+
+def _build_histogram(histogram: pl.DataFrame):
     """
-    Vẽ histogram từ bảng bin đã được Polars tính sẵn.
-
-    Không truyền toàn bộ danh sách điểm sang Plotly.
+    Histogram đã được aggregate bằng Polars.
+    Chỉ truyền vài chục bin sang Plotly.
     """
-
-    x_values = histogram["score"].to_list()
-    counts = histogram["count"].to_list()
-    bin_starts = histogram["bin_start"].to_list()
-    bin_ends = histogram["bin_end"].to_list()
-
-    customdata = [
-        [
-            start,
-            end,
-        ]
-        for start, end in zip(
-            bin_starts,
-            bin_ends,
+    customdata = list(
+        zip(
+            histogram["bin_start"].to_list(),
+            histogram["bin_end"].to_list(),
         )
-    ]
+    )
 
     fig = px.bar(
-        x=x_values,
-        y=counts,
+        x=histogram["score"].to_list(),
+        y=histogram["count"].to_list(),
         labels={
             "x": "Điểm",
             "y": "Số thí sinh",
@@ -79,12 +67,12 @@ def _build_histogram(
         title=None,
         xaxis_title="Điểm",
         yaxis_title="Số thí sinh",
-        margin=dict(
-            l=40,
-            r=20,
-            t=20,
-            b=40,
-        ),
+        margin={
+            "l": 40,
+            "r": 20,
+            "t": 20,
+            "b": 40,
+        },
         bargap=0.05,
     )
 
@@ -99,63 +87,135 @@ def _build_histogram(
 
 
 
+
 def _build_province_map(
-    province_statistics,
+    province_statistics: pl.DataFrame,
 ):
-    """
-    Tạo bản đồ choropleth theo điểm trung bình tỉnh.
-
-    GeoJSON:
-        properties.ten_tinh
-
-    Data:
-        _province_name
-    """
-
-    geojson = json.loads(
-        BAN_DO_HANH_CHINH.to_json()
-    )
-
     map_df = province_statistics.to_pandas()
 
     fig = px.choropleth(
         map_df,
-        geojson=geojson,
+        geojson=BAN_DO_HANH_CHINH_GEOJSON,
         locations="_province_name",
         featureidkey="properties.ten_tinh",
         color="mean",
-        color_continuous_scale="Viridis",
+        color_continuous_scale=[
+            [0.00, "#F1F5F9"],
+            [0.20, "#DBEAFE"],
+            [0.40, "#93C5FD"],
+            [0.60, "#60A5FA"],
+            [0.80, "#2563EB"],
+            [1.00, "#1D4ED8"],
+        ],
         projection="mercator",
+
+        # Tên tỉnh dùng làm tiêu đề hover
         hover_name="_province_name",
-        hover_data={
-            "_province_name": False,
-            "mean": ":.2f",
-            "median": ":.2f",
-            "count": ":,",
-        },
-        labels={
-            "mean": "Điểm TB",
-            "median": "Trung vị",
-            "count": "Số thí sinh",
+
+        # Dữ liệu bổ sung cho hover
+        custom_data=[
+            "_province_name",
+            "median",
+            "count",
+        ],
+    )
+
+    # =========================================================
+    # HOVER
+    # =========================================================
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{customdata[0]}</b>"
+            "<br>"
+            "<span style='color:#64748B'>Điểm trung bình</span>"
+            "  <b>%{z:.2f}</b>"
+            "<br>"
+            "<span style='color:#64748B'>Trung vị</span>"
+            "  <b>%{customdata[1]:.2f}</b>"
+            "<br>"
+            "<span style='color:#64748B'>Số thí sinh</span>"
+            "  <b>%{customdata[2]:,}</b>"
+            "<extra></extra>"
+        ),
+        marker={
+            "line": {
+                "color": "rgba(255,255,255,0.9)",
+                "width": 0.8,
+            }
         },
     )
 
+    # =========================================================
+    # GEO
+    # =========================================================
     fig.update_geos(
         fitbounds="locations",
         visible=False,
+        bgcolor="rgba(0,0,0,0)",
     )
 
+    # =========================================================
+    # LAYOUT
+    # =========================================================
     fig.update_layout(
         title=None,
-        margin=dict(
-            l=0,
-            r=0,
-            t=0,
-            b=0,
-        ),
-        coloraxis_colorbar=dict(
-            title="Điểm TB",
-        ),
+
+        # Nền trong suốt để hòa với Card
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+
+        margin={
+            "l": 10,
+            "r": 10,
+            "t": 10,
+            "b": 10,
+        },
+
+        # Font tổng thể
+        font={
+            "family": "Inter, system-ui, -apple-system, BlinkMacSystemFont, "
+                       "'Segoe UI', sans-serif",
+            "size": 13,
+            "color": "#334155",
+        },
+
+        # Colorbar
+        coloraxis_colorbar={
+            "title": {
+                "text": "Điểm TB",
+                "font": {
+                    "size": 12,
+                    "color": "#475569",
+                },
+            },
+            "tickfont": {
+                "size": 11,
+                "color": "#64748B",
+            },
+            "thickness": 12,
+            "len": 0.55,
+            "x": 0.98,
+            "xanchor": "right",
+            "y": 0.5,
+            "outlinewidth": 0,
+            "bgcolor": "rgba(255,255,255,0.75)",
+        },
+
+        # Hover box
+        hoverlabel={
+            "bgcolor": "white",
+            "bordercolor": "#E2E8F0",
+            "font": {
+                "family": "Inter, system-ui, -apple-system, "
+                           "BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                "size": 13,
+                "color": "#0F172A",
+            },
+            "align": "left",
+        },
+
+        # Không cần toolbar
+        dragmode=False,
     )
 
     return fig
@@ -175,10 +235,13 @@ def _build_province_map(
     Output(pid("nation-map"), "figure"),
     Output(pid("nation-province-table"), "data"),
     Output(pid("nation-dashboard-result"), "className"),
+
     Input(pid("nation-button"), "n_clicks"),
+
     State(pid("nation-subject"), "value"),
     State(pid("nation-year"), "value"),
     State(pid("nation-options"), "value"),
+
     prevent_initial_call=True,
 )
 def update_nation_dashboard(
@@ -188,30 +251,27 @@ def update_nation_dashboard(
     options,
 ):
     """
-    Tính toán và cập nhật toàn bộ dashboard Cả nước.
+    Tính toán và cập nhật dashboard Cả nước.
     """
 
     if not n_clicks:
         raise PreventUpdate
 
+    if subject is None or year is None:
+        raise PreventUpdate
 
+    options = options or []
 
-    # -------------------------------------------------------------
-    # Phần thống kê chính   
-    # -------------------------------------------------------------
-    def _main_stats():
-        nonlocal options
-        if subject is None or year is None:
-            raise PreventUpdate
+    include_zero = "include_zero" in options
+    include_failed = "include_failed" in options
 
-        options = options or []
-
-        include_zero = "include_zero" in options
-        include_failed = "include_failed" in options
+    try:
+        start_time = time.perf_counter()
 
         # =========================================================
-        # CHẠY PHÂN TÍCH
+        # PHÂN TÍCH
         # =========================================================
+
         result = calculate_nation_analysis(
             year=str(year),
             subject=subject,
@@ -224,18 +284,13 @@ def update_nation_dashboard(
         histogram = result["histogram"]
 
         # =========================================================
-        # KPI
-        # =========================================================
-        nation_mean = _format_number(
-            statistics["mean"]
-        )
-
-        # =========================================================
         # STATISTICS
         # =========================================================
-        stat_mean = _format_number(
-            statistics["mean"]
-        )
+
+        mean = statistics["mean"]
+
+        nation_mean = _format_number(mean)
+        stat_mean = nation_mean
 
         stat_median = _format_number(
             statistics["median"]
@@ -258,13 +313,15 @@ def update_nation_dashboard(
         # =========================================================
         # HISTOGRAM
         # =========================================================
+
         histogram_figure = _build_histogram(
-            histogram=histogram,
+            histogram
         )
 
         # =========================================================
         # MAP
         # =========================================================
+
         province_map = _build_province_map(
             province_statistics
         )
@@ -272,32 +329,33 @@ def update_nation_dashboard(
         # =========================================================
         # TABLE
         # =========================================================
-        #
-        # Giữ key nội bộ:
-        # rank
-        # _province_name
-        # mean
-        # median
-        #
-        # DataTable sẽ chịu trách nhiệm hiển thị tên tiếng Việt.
-        #
+
         province_table = (
             province_statistics
             .select(
                 [
-                    pl.col("rank").alias("Xếp hạng"),
+                    pl.col("rank").alias("Hạng"),
                     pl.col("_province_name").alias("Tỉnh thành"),
-                    pl.col("mean").round(2).cast(pl.Decimal(5, 2)).alias("Điểm trung bình"),
-                    pl.col("median").round(2).cast(pl.Decimal(5, 2)).alias("Trung vị"),
+                    pl.col("mean")
+                    .cast(pl.Decimal(4, 2))
+                    .alias("Trung bình"),
+                    pl.col("median")
+                    .cast(pl.Decimal(4, 2))
+                    .alias("Trung vị"),
                 ]
             )
             .to_dicts()
         )
 
+
+
+        end_time = time.perf_counter()
+        print(f"Thời gian chạy truy vấn theo cả nước: {(end_time - start_time):.4} s")
+
+
         # =========================================================
-        # HIỂN THỊ DASHBOARD
+        # RETURN
         # =========================================================
-        dashboard_class = "opacity-100"
 
         return (
             nation_mean,
@@ -309,16 +367,23 @@ def update_nation_dashboard(
             histogram_figure,
             province_map,
             province_table,
-            dashboard_class,
+            "opacity-100",
         )
 
-
-    try: 
-        return _main_stats()
-    except:
+    except Exception:
         print("--- LỖI XẢY RA TRONG CALLBACK ---")
         traceback.print_exc()
         print("---------------------------------")
-        return no_update
 
-    
+        return (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+        )

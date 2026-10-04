@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+
 import polars as pl
 
 from data import (
@@ -21,51 +22,71 @@ def _prepare_score_data(
     include_failed: bool,
 ) -> pl.LazyFrame:
     """
-    Chuẩn bị LazyFrame điểm thi đã:
-    - chọn đúng năm
-    - thêm mã tỉnh từ SOBAODANH
-    - đổi mã tỉnh -> tên tỉnh hiện tại
-    - lọc điểm null
-    - lọc điểm 0 nếu cần
-    - lọc thí sinh trượt nếu cần
+    Chuẩn bị LazyFrame tối thiểu cần thiết cho dashboard.
+
+    Sau khi filter xong, DataFrame cuối chỉ giữ:
+        - subject
+        - _province_name
+
+    Không giữ lại SOBAODANH hoặc is_eligible vì các cột này
+    không còn được sử dụng trong các bước tính toán phía sau.
     """
 
     year = str(year)
 
     if year not in BANG_DIEM:
-        raise ValueError(f"Không có dữ liệu điểm cho năm {year}")
+        raise ValueError(
+            f"Không có dữ liệu điểm cho năm {year}"
+        )
 
     if year not in BANG_QUY_DOI_TINH_THANH:
-        raise ValueError(f"Không có bảng mã tỉnh cho năm {year}")
+        raise ValueError(
+            f"Không có bảng mã tỉnh cho năm {year}"
+        )
 
     mapping = BANG_QUY_DOI_TINH_THANH[year]
 
     if not mapping:
-        raise ValueError(f"Bảng mã tỉnh năm {year} đang rỗng")
+        raise ValueError(
+            f"Bảng mã tỉnh năm {year} đang rỗng"
+        )
 
-    lf = BANG_DIEM[year]
+    # ---------------------------------------------------------
+    # Chỉ đọc đúng những cột cần thiết từ Parquet.
+    # ---------------------------------------------------------
 
-    # SOBAODANH có dạng mã tỉnh + số báo danh
+    lf = BANG_DIEM[year].select(
+        [
+            "SOBAODANH",
+            subject,
+            "is_eligible",
+        ]
+    )
+
+    # ---------------------------------------------------------
+    # Mã tỉnh nằm ở 2 ký tự đầu của SOBAODANH.
+    # ---------------------------------------------------------
+
     lf = lf.with_columns(
         pl.col("SOBAODANH")
         .str.slice(0, 2)
         .alias("_province_code")
     )
 
-    # Tạo bảng:
+    # ---------------------------------------------------------
+    # Mapping mã tỉnh cũ -> tên tỉnh hiện tại.
     #
-    # _province_code | _province_name
-    # 08             | Lào Cai
-    # 13             | Lào Cai
-    #
-    # Việc này rất quan trọng đối với dữ liệu 2025,
-    # vì nhiều mã cũ có thể thuộc cùng một tỉnh hiện tại.
-    mapping_df = pl.DataFrame(
+    # Ví dụ:
+    # 08 -> Lào Cai
+    # 13 -> Lào Cai
+    # ---------------------------------------------------------
+
+    mapping_df = pl.LazyFrame(
         {
             "_province_code": list(mapping.keys()),
             "_province_name": list(mapping.values()),
         }
-    ).lazy()
+    )
 
     lf = lf.join(
         mapping_df,
@@ -73,44 +94,48 @@ def _prepare_score_data(
         how="left",
     )
 
-    # Chỉ lấy những cột cần thiết.
-    lf = lf.select(
-        [
-            "SOBAODANH",
-            subject,
-            "is_eligible",
-            "_province_name",
-        ]
-    )
+    # ---------------------------------------------------------
+    # Filter.
+    #
+    # Làm filter trước khi collect để giảm dữ liệu phải đưa
+    # vào RAM.
+    # ---------------------------------------------------------
 
-    # Không tính những dòng không xác định được tỉnh.
     lf = lf.filter(
         pl.col("_province_name").is_not_null()
     )
 
-    # Điểm null không thể tham gia thống kê.
     lf = lf.filter(
         pl.col(subject).is_not_null()
     )
 
-    # Loại điểm 0 nếu người dùng không cho phép tính.
     if not include_zero:
         lf = lf.filter(
             pl.col(subject) != 0
         )
 
-    # is_eligible:
-    # True  = đủ điều kiện
-    # False = trượt
-    #
-    # Nếu không cho phép tính cả người trượt,
-    # chỉ giữ những người đủ điều kiện.
     if not include_failed:
         lf = lf.filter(
-            pl.col("is_eligible") == True
+            pl.col("is_eligible")
         )
 
-    return lf
+    # ---------------------------------------------------------
+    # QUAN TRỌNG:
+    #
+    # Sau toàn bộ filter, bỏ:
+    #   SOBAODANH
+    #   is_eligible
+    #   _province_code
+    #
+    # DataFrame collect cuối cùng chỉ còn 2 cột.
+    # ---------------------------------------------------------
+
+    return lf.select(
+        [
+            subject,
+            "_province_name",
+        ]
+    )
 
 
 def _calculate_statistics(
@@ -118,34 +143,47 @@ def _calculate_statistics(
     subject: str,
 ) -> dict:
     """
-    Tính các thống kê toàn quốc từ DataFrame đã collect.
-
-    Không đọc lại Parquet.
+    Tính thống kê toàn quốc từ DataFrame đã collect.
     """
+
     result = (
         df.select(
             [
-                pl.col(subject).mean().alias("mean"),
-                pl.col(subject).median().alias("median"),
-                pl.col(subject).quantile(0.25).alias("q1"),
-                pl.col(subject).quantile(0.75).alias("q3"),
-                pl.col(subject).std().alias("std"),
-                pl.col(subject).skew().alias("skew"),
-                pl.len().alias("count"),
+                pl.col(subject)
+                .mean()
+                .alias("mean"),
+
+                pl.col(subject)
+                .median()
+                .alias("median"),
+
+                pl.col(subject)
+                .quantile(0.25)
+                .alias("q1"),
+
+                pl.col(subject)
+                .quantile(0.75)
+                .alias("q3"),
+
+                pl.col(subject)
+                .std()
+                .alias("std"),
+
+                pl.col(subject)
+                .skew()
+                .alias("skew"),
+
+                pl.len()
+                .alias("count"),
             ]
         )
-        .row(0, named=True)
+        .row(
+            0,
+            named=True,
+        )
     )
 
-    return {
-        "mean": result["mean"],
-        "median": result["median"],
-        "q1": result["q1"],
-        "q3": result["q3"],
-        "std": result["std"],
-        "skew": result["skew"],
-        "count": result["count"],
-    }
+    return result
 
 
 def _calculate_province_statistics(
@@ -153,11 +191,7 @@ def _calculate_province_statistics(
     subject: str,
 ) -> pl.DataFrame:
     """
-    Tính thống kê theo tỉnh.
-
-    Group theo _province_name thay vì _province_code
-    để xử lý đúng trường hợp nhiều mã tỉnh cũ
-    được sáp nhập thành một tỉnh hiện tại.
+    Tính thống kê theo tỉnh hiện tại.
     """
 
     return (
@@ -194,13 +228,14 @@ def _calculate_histogram(
     bins: int = HISTOGRAM_BINS,
 ) -> pl.DataFrame:
     """
-    Tính histogram ngay bằng Polars.
+    Tính histogram bằng Polars.
 
-    Điểm được chia thành các khoảng đều nhau từ 0 -> 10.
-    Kết quả chỉ còn khoảng 40 dòng thay vì phải gửi hơn
-    một triệu điểm sang Plotly.
+    Chỉ trả về khoảng 40 dòng.
     """
-    bin_width = (SCORE_MAX - SCORE_MIN) / bins
+
+    bin_width = (
+        SCORE_MAX - SCORE_MIN
+    ) / bins
 
     histogram = (
         df.select(
@@ -209,7 +244,10 @@ def _calculate_histogram(
         .with_columns(
             (
                 (
-                    (pl.col("score") - SCORE_MIN)
+                    (
+                        pl.col("score")
+                        - SCORE_MIN
+                    )
                     / bin_width
                 )
                 .floor()
@@ -223,14 +261,17 @@ def _calculate_histogram(
         )
     )
 
-    # Tạo đầy đủ các bin kể cả những bin có count = 0.
+    # ---------------------------------------------------------
+    # Đảm bảo có đủ 40 bin.
+    # ---------------------------------------------------------
+
     all_bins = pl.DataFrame(
         {
-            "_bin": list(range(bins)),
+            "_bin": range(bins),
         }
     )
 
-    histogram = (
+    return (
         all_bins
         .join(
             histogram,
@@ -264,13 +305,11 @@ def _calculate_histogram(
         .sort("_bin")
     )
 
-    return histogram
 
 
 
 
-
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=8)
 def calculate_nation_analysis(
     year: str,
     subject: str,
@@ -278,18 +317,16 @@ def calculate_nation_analysis(
     include_failed: bool = True,
 ) -> dict:
     """
-    Chạy toàn bộ phân tích cả nước.
+    Phân tích toàn quốc.
 
-    Điểm tối ưu chính:
-    ------------------
-    Parquet -> LazyFrame -> FILTER/JOIN -> collect() đúng 1 lần
-                                      |
-                                      +-> statistics
-                                      +-> province statistics
-                                      +-> histogram
+    Chỉ collect một lần.
+    Sau khi collect, toàn bộ phép tính chạy trên DataFrame
+    đã nằm trong RAM.
 
-    Như vậy không phải scan Parquet 3 lần như phiên bản cũ.
+    Cache chỉ giữ kết quả cuối cùng, không giữ DataFrame
+    hàng triệu dòng.
     """
+
     year = str(year)
 
     lf = _prepare_score_data(
@@ -299,9 +336,10 @@ def calculate_nation_analysis(
         include_failed=include_failed,
     )
 
-    # =========================================================
+    # ---------------------------------------------------------
     # COLLECT DUY NHẤT MỘT LẦN
-    # =========================================================
+    # ---------------------------------------------------------
+
     df = lf.collect()
 
     if df.is_empty():
@@ -309,8 +347,10 @@ def calculate_nation_analysis(
             "Không có dữ liệu phù hợp với các điều kiện đã chọn."
         )
 
-    # Sau khi collect, tất cả các phép tính phía dưới đều
-    # chạy trên DataFrame trong memory, không đọc lại Parquet.
+    # ---------------------------------------------------------
+    # Tính toán trên cùng một DataFrame.
+    # ---------------------------------------------------------
+
     statistics = _calculate_statistics(
         df=df,
         subject=subject,

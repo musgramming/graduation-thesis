@@ -161,7 +161,7 @@ if __name__ == "__main__":
                 app.server, 
                 host = host, 
                 port = port, 
-                threads = 8
+                threads = 1
             )
         except KeyboardInterrupt:
             print("Đã tắt Waitress server!")

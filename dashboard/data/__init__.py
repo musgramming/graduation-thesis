@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 import geopandas as gpd
 import polars as pl
 import json5
+
 
 
 # =====================================================================
@@ -124,5 +126,11 @@ COMB_OPTIONS = [
 
 
 BAN_DO_HANH_CHINH = gpd.read_file(
-    BASE_GRAPH_DIR / "ban_do_hanh_chinh.geojson"
+    BASE_GRAPH_DIR / "ban_do_hanh_chinh_dashboard.gpkg", 
+    columns=["ten_tinh", "geometry"]
+)
+
+
+BAN_DO_HANH_CHINH_GEOJSON = json.loads(
+    BAN_DO_HANH_CHINH.to_json()
 )

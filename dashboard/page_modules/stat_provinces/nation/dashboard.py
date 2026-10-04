@@ -4,6 +4,9 @@ from .list_of_id import pid
 from utils.graph import create_empty_figure
 
 
+
+
+
 # ============================================================
 # KPI
 # ============================================================
@@ -39,6 +42,9 @@ kpi_layout = dbc.Row(
     ],
     className="g-3",
 )
+
+
+
 
 
 # ============================================================
@@ -140,6 +146,9 @@ histogram_layout = dbc.Card(
 )
 
 
+
+
+
 # ============================================================
 # Bản đồ
 # ============================================================
@@ -147,8 +156,30 @@ histogram_layout = dbc.Card(
 map_layout = dbc.Card(
     [
         dbc.CardHeader(
-            "Phân bố điểm trung bình theo tỉnh thành",
-            className="fw-semibold",
+            [
+                html.Div(
+                    [
+                        html.Div(
+                            "Phân bố điểm trung bình",
+                            className="fw-semibold",
+                        ),
+                        html.Div(
+                            "So sánh mức điểm giữa các tỉnh thành",
+                            className="text-muted small",
+                        ),
+                    ]
+                ),
+                dbc.Badge(
+                    "Toàn quốc",
+                    color="light",
+                    text_color="secondary",
+                    className="border",
+                ),
+            ],
+            className=(
+                "d-flex justify-content-between "
+                "align-items-center"
+            ),
         ),
 
         dbc.CardBody(
@@ -157,15 +188,39 @@ map_layout = dbc.Card(
                 figure=create_empty_figure(""),
                 config={
                     "displayModeBar": False,
+                    "scrollZoom": False,
+                    "doubleClick": False,
                 },
                 style={
-                    "height": "600px",
+                    "height": "560px",
                 },
-            )
+            ),
+            className="p-2",
+        ),
+
+        dbc.CardFooter(
+            html.Small(
+                [
+                    "Nguồn bản đồ: ",
+                    html.A(
+                        "GIS.vn",
+                        href="https://gis.vn",
+                        target="_blank",
+                        rel="noopener noreferrer",
+                        className="text-decoration-none",
+                    ),
+                ],
+                className="text-muted",
+            ),
+            className="bg-transparent border-0 pt-0",
         ),
     ],
     className="h-100 shadow-sm",
 )
+
+
+
+
 
 
 # ============================================================
@@ -184,16 +239,16 @@ province_table_layout = dbc.Card(
                 id=pid("nation-province-table"),
                 columns=[
                     {
-                        "name": "Xếp hạng",
-                        "id": "Xếp hạng",
+                        "name": "# Hạng",
+                        "id": "Hạng",
                     },
                     {
                         "name": "Tỉnh thành",
                         "id": "Tỉnh thành",
                     },
                     {
-                        "name": "Điểm trung bình",
-                        "id": "Điểm trung bình",
+                        "name": "Trung bình",
+                        "id": "Trung bình",
                     },
                     {
                         "name": "Trung vị",
@@ -203,7 +258,7 @@ province_table_layout = dbc.Card(
                 data=[],
                 sort_action="native",
                 page_action="native",
-                page_size=34,
+                page_size=14,
                 style_table={
                     "overflowX": "auto",
                 },
@@ -221,9 +276,8 @@ province_table_layout = dbc.Card(
 )
 
 
-# ============================================================
-# Dashboard
-# ============================================================
+
+
 
 # ============================================================
 # Dashboard
