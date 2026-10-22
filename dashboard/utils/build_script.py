@@ -250,7 +250,7 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
 
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=4)
 def _cached_display_graph_and_table(
     year: int, 
     self_score : float, 

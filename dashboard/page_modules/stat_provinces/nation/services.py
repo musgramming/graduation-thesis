@@ -309,7 +309,7 @@ def _calculate_histogram(
 
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=4)
 def calculate_nation_analysis(
     year: str,
     subject: str,

@@ -100,7 +100,7 @@ def build_ranking_query(
 # =====================================================================
 # DÙNG LRU_CACHE ĐỂ GIỮ BẢNG XẾP HẠNG TRÊN RAM, TRÁNH QUÉT LẠI TRIỆU DÒNG
 # =====================================================================
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=4)
 def get_cached_ranking(year: int, subject: str, include_zero: bool, include_failed: bool) -> pl.DataFrame:
     lf = (
         BANG_DIEM[year]
