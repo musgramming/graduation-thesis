@@ -203,7 +203,7 @@ def calculate_province_analysis(
         statistics_query,
         ranking_query,
         histogram_query,
-    ])
+    ], engine="streaming")
 
     statistics = statistics.row(0, named=True)
 

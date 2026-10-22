@@ -1,10 +1,8 @@
 import os
-import logging
 from dotenv import load_dotenv
 from flask import Flask
 from dash import Dash
 from flask_cors import CORS
-from waitress import serve
 
 from template_layout.main_layout import app_layout
 from template_layout.callback import *
@@ -13,10 +11,6 @@ from api.not_access import api_bp as not_access_bp
 from utils.exception import unreachable
 from utils.read_mode import get_standardized_mode
 from utils.direction.exception import DashModeException
-
-
-logging.getLogger('waitress.queue').setLevel(logging.ERROR)
-
 
 
 
@@ -138,33 +132,22 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", 8050))
 
-    # Kiểm tra Fail-fast ngay lập tức
     if mode not in ("development", "production"):
         raise DashModeException(
             f"Lỗi cấu hình: Phát hiện biến môi trường không hợp lệ ('{mode}'). "
             "Hệ thống chỉ chấp nhận 'development' hoặc 'production'."
         )
 
-    if (mode == "development"): 
-        print(f"-> Đang khởi động Dash server tại http://{host}:{port} ...")
+    # Vì là dashboard chạy local/tool, ta dùng trực tiếp app.run() cho cả 2 mode
+    # (Chỉ bật debug=True khi ở môi trường development để tự động reload khi sửa code)
+    is_debug = (mode == "development")
+    
+    print(f"-> Đang khởi động Dashboard tại http://{host}:{port} (Mode: {mode}) ...")
+    try:
         app.run(
-            host = host, 
-            port = port, 
-            debug = True
+            host=host, 
+            port=port, 
+            debug=is_debug
         )
-        print("Đã tắt Dash server!")
-
-    elif (mode == "production"):
-        try: 
-            print(f"-> Đang khởi động Waitress server tại http://{host}:{port} ...")
-            serve(
-                app.server, 
-                host = host, 
-                port = port, 
-                threads = 1
-            )
-        except KeyboardInterrupt:
-            print("Đã tắt Waitress server!")
-
-    else:
-        unreachable("Debug là None rồi!")
+    except KeyboardInterrupt:
+        print("\nĐã tắt Dashboard!")

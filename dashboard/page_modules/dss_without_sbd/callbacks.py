@@ -222,7 +222,7 @@ def calculate_and_store(
                 ).alias("score")
             )
             .filter(pl.col("score") >= 15)
-            .collect()
+            .collect(engine = "streaming")
         )
     except Exception as exc:
         return (

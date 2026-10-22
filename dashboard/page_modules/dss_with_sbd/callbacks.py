@@ -203,7 +203,7 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
         df_all = (
             BANG_DIEM_TO_HOP[year_int]
             .filter(pl.col("SOBAODANH") == sbd_str)
-            .collect()
+            .collect(engine = "streaming")
         )
 
         if df_all.is_empty():
@@ -244,7 +244,7 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
             .join(TO_HOP, on="Tổ hợp", how="left")
             .select(["Tổ hợp", "Tên tổ hợp", "Tổng điểm"])
             .sort("Tổ hợp")
-            .collect()
+            .collect(engine = "streaming")
         )
 
         options = [
@@ -291,7 +291,7 @@ def lookup_candidate(search_clicks, selected_comb, sbd, year):
                 & (pl.col("Tổ hợp") == selected_comb)
             )
             .select("Tổng điểm")
-            .collect()
+            .collect(engine = "streaming")
         )
 
         if df_score.is_empty():

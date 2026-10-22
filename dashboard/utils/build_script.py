@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 from functools import lru_cache
 from typing import Literal
 
@@ -251,11 +252,11 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
 
 
 @lru_cache(maxsize=32)
-def display_graph_and_table(
+def _cached_display_graph_and_table(
     year: int, 
     self_score : float, 
     floor_score : float, 
-    combs : list[str], 
+    combs : tuple[str], 
     mode : Literal["raw-score", "z-score", "robust"]
 ) -> html.Div:
     """
@@ -299,6 +300,10 @@ def display_graph_and_table(
         unreachable(
             f"Không tồn tại mode {mode}"
         )
+
+    start = time.time()
+
+    combs = list(combs)
 
     lf_transformed = transform_scores(
         year,
@@ -418,8 +423,10 @@ def display_graph_and_table(
     # 4. FIGURE — OVERALL DISTRIBUTION
     # ================================================================
 
+    pdf_result = df_result.to_pandas()
+
     fig_overall = px.histogram(
-        df_result.to_pandas(),
+        pdf_result,
         x="Điểm quy đổi",
         title=None,
         hover_data={
@@ -474,16 +481,13 @@ def display_graph_and_table(
     # ================================================================
 
     if df_comp.is_empty():
-
         fig_comp = go.Figure()
-
         fig_comp.add_annotation(
             text="Không có thí sinh trong vùng điểm này.",
             showarrow=False,
         )
 
     else:
-
         fig_comp = px.histogram(
             df_comp.to_pandas(),
             x="Điểm quy đổi",
@@ -525,16 +529,13 @@ def display_graph_and_table(
     # ================================================================
 
     if df_safety.is_empty():
-
         fig_safety = go.Figure()
-
         fig_safety.add_annotation(
             text="Không có thí sinh trong vùng điểm sàn.",
             showarrow=False,
         )
 
     else:
-
         fig_safety = px.histogram(
             df_safety.to_pandas(),
             x="Điểm quy đổi",
@@ -1007,7 +1008,9 @@ def display_graph_and_table(
         ),
     ], className="shadow-sm border-0 mb-4")
 
+    end = time.time()
 
+    print(f"Thời gian thực hiện: {(end - start):.4} s")
 
     # ================================================================
     # 13. FINAL DASHBOARD
@@ -1039,3 +1042,25 @@ def display_graph_and_table(
         ),
 
     ])
+
+
+
+
+
+def display_graph_and_table(
+    year: int, 
+    self_score : float, 
+    floor_score : float, 
+    combs : list[str], 
+    mode : Literal["raw-score", "z-score", "robust"]
+) -> html.Div:
+    """
+    Hàm wrapper bọc ngoài để chuyển list combs thành tuple, giúp tương thích với lru_cache.
+    """
+    return _cached_display_graph_and_table(
+        year=year,
+        self_score=self_score,
+        floor_score=floor_score,
+        combs=tuple(combs),
+        mode=mode
+    )

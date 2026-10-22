@@ -316,19 +316,9 @@ def calculate_nation_analysis(
     include_zero: bool = True,
     include_failed: bool = True,
 ) -> dict:
-    """
-    Phân tích toàn quốc.
-
-    Chỉ collect một lần.
-    Sau khi collect, toàn bộ phép tính chạy trên DataFrame
-    đã nằm trong RAM.
-
-    Cache chỉ giữ kết quả cuối cùng, không giữ DataFrame
-    hàng triệu dòng.
-    """
-
     year = str(year)
 
+    # 1. Lấy LazyFrame cơ sở đã qua filter (chưa collect!)
     lf = _prepare_score_data(
         year=year,
         subject=subject,
@@ -336,34 +326,64 @@ def calculate_nation_analysis(
         include_failed=include_failed,
     )
 
-    # ---------------------------------------------------------
-    # COLLECT DUY NHẤT MỘT LẦN
-    # ---------------------------------------------------------
+    # 2. Xây dựng các Lazy Query tổng hợp (chỉ gom nhóm, không giữ dữ liệu thô)
+    
+    # Thống kê toàn quốc (Trả về 1 dòng duy nhất)
+    lf_stats = lf.select([
+        pl.col(subject).mean().alias("mean"),
+        pl.col(subject).median().alias("median"),
+        pl.col(subject).quantile(0.25).alias("q1"),
+        pl.col(subject).quantile(0.75).alias("q3"),
+        pl.col(subject).std().alias("std"),
+        pl.col(subject).skew().alias("skew"),
+        pl.len().alias("count"),
+    ])
 
-    df = lf.collect()
+    # Thống kê theo tỉnh (Trả về đúng 63 dòng)
+    lf_province = (
+        lf.group_by("_province_name")
+        .agg([
+            pl.col(subject).mean().alias("mean"),
+            pl.col(subject).median().alias("median"),
+            pl.len().alias("count"),
+        ])
+        .sort("mean", descending=True, nulls_last=True)
+        .with_row_index("rank", offset=1)
+    )
 
-    if df.is_empty():
-        raise ValueError(
-            "Không có dữ liệu phù hợp với các điều kiện đã chọn."
+    # Thống kê Histogram (Trả về đúng 40 dòng bin)
+    bin_width = (SCORE_MAX - SCORE_MIN) / HISTOGRAM_BINS
+    lf_hist = (
+        lf.select(pl.col(subject).alias("score"))
+        .with_columns(
+            ((pl.col("score") - SCORE_MIN) / bin_width)
+            .floor().cast(pl.Int32).clip(0, HISTOGRAM_BINS - 1)
+            .alias("_bin")
         )
-
-    # ---------------------------------------------------------
-    # Tính toán trên cùng một DataFrame.
-    # ---------------------------------------------------------
-
-    statistics = _calculate_statistics(
-        df=df,
-        subject=subject,
+        .group_by("_bin")
+        .agg(pl.len().alias("count"))
     )
 
-    province_statistics = _calculate_province_statistics(
-        df=df,
-        subject=subject,
-    )
+    # 3. COLLECT ĐỒNG THỜI CÁC BẢNG KẾT QUẢ SIÊU NHỎ NÀY BẰNG pl.collect_all
+    df_stats, province_statistics, histogram_raw = pl.collect_all([
+        lf_stats, 
+        lf_province, 
+        lf_hist
+    ])
 
-    histogram = _calculate_histogram(
-        df=df,
-        subject=subject,
+    statistics = df_stats.row(0, named=True)
+
+    all_bins = pl.DataFrame({"_bin": range(HISTOGRAM_BINS)})
+    histogram = (
+        all_bins
+        .join(histogram_raw, on="_bin", how="left")
+        .with_columns(
+            pl.col("count").fill_null(0).cast(pl.Int64),
+            (pl.lit(SCORE_MIN) + (pl.col("_bin") + 0.5) * bin_width).alias("score"),
+            (pl.lit(SCORE_MIN) + pl.col("_bin") * bin_width).alias("bin_start"),
+            (pl.lit(SCORE_MIN) + (pl.col("_bin") + 1) * bin_width).alias("bin_end"),
+        )
+        .sort("_bin")
     )
 
     return {
