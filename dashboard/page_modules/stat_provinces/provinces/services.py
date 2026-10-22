@@ -114,7 +114,7 @@ def get_cached_ranking(year: int, subject: str, include_zero: bool, include_fail
     lf = apply_score_filters(lf, subject, include_zero, include_failed)
     
     ranking_query = build_ranking_query(lf, subject)
-    return ranking_query.collect()  # Kết quả trả về chỉ đúng 63 dòng (cực kỳ nhẹ)
+    return ranking_query.collect(engine="streaming") 
 
 
 HISTOGRAM_BIN_WIDTH = 0.25
@@ -188,7 +188,7 @@ def calculate_province_analysis(
     statistics, histogram = pl.collect_all([
         statistics_query,
         histogram_query,
-    ])
+    ], engine="streaming")
 
     statistics = statistics.row(0, named=True)
 

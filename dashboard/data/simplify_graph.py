@@ -10,7 +10,7 @@ gdf = gpd.read_file(
 
 simplified_gdf = gdf.copy(deep=True)
 simplified_gdf["geometry"] = gdf["geometry"].simplify(
-    tolerance=0.001, 
+    tolerance=0.01, 
     preserve_topology=True
 )
 

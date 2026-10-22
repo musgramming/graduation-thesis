@@ -320,7 +320,7 @@ def _cached_display_graph_and_table(
         ])
     )
 
-    df_result = lf_final.collect()
+    df_result = lf_final.collect(engine="streaming")
 
     if df_result.is_empty():
         return dbc.Alert(

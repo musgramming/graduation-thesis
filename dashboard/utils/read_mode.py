@@ -20,8 +20,6 @@ def get_standardized_mode() -> str:
     # Chuẩn hóa chuỗi (loại bỏ khoảng trắng, viết thường)
     normalized = raw_mode.strip().lower()
     
-    # Bản đồ quy đổi các tên gọi tương đương của bên thứ 3 (Flask/Dash cũ)
-    # Ví dụ: flask dùng 'prod' hay 'development', ta quy về chuẩn chung của mình
     mapping = {
         "prod": "production",
         "production": "production",

@@ -369,7 +369,7 @@ def calculate_nation_analysis(
         lf_stats, 
         lf_province, 
         lf_hist
-    ])
+    ], engine="streaming")
 
     statistics = df_stats.row(0, named=True)
 

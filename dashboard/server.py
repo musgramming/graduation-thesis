@@ -1,4 +1,8 @@
 import os
+
+os.environ["POLARS_MAX_THREADS"] = "2"
+
+
 from dotenv import load_dotenv
 from flask import Flask
 from dash import Dash
