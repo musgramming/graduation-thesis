@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import lru_cache
 
 import polars as pl
 import plotly.graph_objects as go
@@ -15,15 +16,11 @@ def add_province_code(
     """
     Extract mã tỉnh/thành từ 2 ký tự đầu của SOBAODANH.
     """
-
     return lf.with_columns(
         pl.col("SOBAODANH")
         .str.slice(0, 2)
         .alias(PROVINCE_CODE_COLUMN)
     )
-
-
-
 
 
 def apply_score_filters(
@@ -43,9 +40,6 @@ def apply_score_filters(
     return lf
 
 
-
-
-
 def build_statistics_query(
     province_lf: pl.LazyFrame,
     subject: str,
@@ -62,23 +56,10 @@ def build_statistics_query(
         score.skew().alias("skew"),
 
         (score >= 9.0).sum().alias("ge_9"),
-
-        ((score >= 9.0) & (score < 9.25))
-            .sum()
-            .alias("score_9_0"),
-
-        ((score >= 9.25) & (score < 9.5))
-            .sum()
-            .alias("score_9_25"),
-
-        ((score >= 9.5) & (score < 9.75))
-            .sum()
-            .alias("score_9_5"),
-
-        ((score >= 9.75) & (score < 10.0))
-            .sum()
-            .alias("score_9_75"),
-
+        ((score >= 9.0) & (score < 9.25)).sum().alias("score_9_0"),
+        ((score >= 9.25) & (score < 9.5)).sum().alias("score_9_25"),
+        ((score >= 9.5) & (score < 9.75)).sum().alias("score_9_5"),
+        ((score >= 9.75) & (score < 10.0)).sum().alias("score_9_75"),
         (score == 10.0).sum().alias("score_10_0"),
 
         (score <= 1.0).sum().alias("score_failed"),
@@ -87,18 +68,13 @@ def build_statistics_query(
     ])
 
 
-
-
-
 def build_ranking_query(
     lf: pl.LazyFrame,
     subject: str,
 ) -> pl.LazyFrame:
     """
-    Tính điểm trung bình của từng tỉnh/thành
-    và xếp hạng toàn quốc.
+    Tính điểm trung bình của từng tỉnh/thành và xếp hạng toàn quốc.
     """
-
     return (
         lf
         .group_by(PROVINCE_CODE_COLUMN)
@@ -121,6 +97,24 @@ def build_ranking_query(
     )
 
 
+# =====================================================================
+# DÙNG LRU_CACHE ĐỂ GIỮ BẢNG XẾP HẠNG TRÊN RAM, TRÁNH QUÉT LẠI TRIỆU DÒNG
+# =====================================================================
+@lru_cache(maxsize=32)
+def get_cached_ranking(year: int, subject: str, include_zero: bool, include_failed: bool) -> pl.DataFrame:
+    lf = (
+        BANG_DIEM[year]
+        .select([
+            "SOBAODANH",
+            "is_eligible",
+            subject,
+        ])
+    )
+    lf = add_province_code(lf)
+    lf = apply_score_filters(lf, subject, include_zero, include_failed)
+    
+    ranking_query = build_ranking_query(lf, subject)
+    return ranking_query.collect()  # Kết quả trả về chỉ đúng 63 dòng (cực kỳ nhẹ)
 
 
 HISTOGRAM_BIN_WIDTH = 0.25
@@ -130,7 +124,6 @@ def build_histogram_query(
     province_lf: pl.LazyFrame,
     subject: str,
 ) -> pl.LazyFrame:
-
     return (
         province_lf
         .select(
@@ -150,9 +143,6 @@ def build_histogram_query(
         )
         .sort("bin")
     )
-
-
-
 
 
 def calculate_province_analysis(
@@ -189,23 +179,21 @@ def calculate_province_analysis(
         subject,
     )
 
-    ranking_query = build_ranking_query(
-        lf,
-        subject,
-    )
-
     histogram_query = build_histogram_query(
         province_lf,
         subject,
     )
 
-    statistics, ranking, histogram = pl.collect_all([
+    # 1. Chỉ collect thống kê riêng của tỉnh và histogram (rất nhỏ và nhanh)
+    statistics, histogram = pl.collect_all([
         statistics_query,
-        ranking_query,
         histogram_query,
-    ], engine="streaming")
+    ])
 
     statistics = statistics.row(0, named=True)
+
+    # 2. Lấy bảng xếp hạng từ RAM thông qua cache (không tốn tài nguyên quét lại)
+    ranking = get_cached_ranking(year, subject, include_zero, include_failed)
 
     selected_rank = ranking.filter(
         pl.col(PROVINCE_CODE_COLUMN) == province
@@ -222,9 +210,6 @@ def calculate_province_analysis(
         "total_provinces": ranking.height,
         "histogram": histogram,
     }
-
-
-
 
 
 def build_histogram_figure(

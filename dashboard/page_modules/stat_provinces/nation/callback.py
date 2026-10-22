@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import time
-import traceback
-
 import polars as pl
 import plotly.express as px
 
@@ -10,6 +7,8 @@ from dash import callback, Input, Output, State, no_update
 from dash.exceptions import PreventUpdate
 
 from data import BAN_DO_HANH_CHINH_GEOJSON
+from utils.check_performance import export_performance
+
 from .services import calculate_nation_analysis
 from .list_of_id import pid
 
@@ -88,6 +87,7 @@ def _build_histogram(histogram: pl.DataFrame):
 
 
 
+@export_performance
 def _build_province_map(
     province_statistics: pl.DataFrame,
 ):
@@ -244,6 +244,7 @@ def _build_province_map(
 
     prevent_initial_call=True,
 )
+@export_performance
 def update_nation_dashboard(
     n_clicks,
     subject,
@@ -266,8 +267,6 @@ def update_nation_dashboard(
     include_failed = "include_failed" in options
 
     try:
-        start_time = time.perf_counter()
-
         # =========================================================
         # PHÂN TÍCH
         # =========================================================
@@ -349,10 +348,6 @@ def update_nation_dashboard(
 
 
 
-        end_time = time.perf_counter()
-        print(f"Thời gian chạy truy vấn theo cả nước: {(end_time - start_time):.4} s")
-
-
         # =========================================================
         # RETURN
         # =========================================================
@@ -371,9 +366,6 @@ def update_nation_dashboard(
         )
 
     except Exception:
-        print("--- LỖI XẢY RA TRONG CALLBACK ---")
-        traceback.print_exc()
-        print("---------------------------------")
 
         return (
             no_update,

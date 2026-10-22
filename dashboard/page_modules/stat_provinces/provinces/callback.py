@@ -1,10 +1,10 @@
-import time
-
 from dash import callback, Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from .list_of_id import pid
 from .services import calculate_province_analysis, build_histogram_figure
+
+from utils.check_performance import export_performance
 from data import BANG_QUY_DOI_TINH_THANH
 from utils.exception import todo, unimplemented, unreachable
 
@@ -106,6 +106,7 @@ def update_province_options(year, current_province, current_options):
     ],
     prevent_initial_call=True,
 )
+@export_performance
 def update_province_dashboard(
     n_clicks,
     subject,
@@ -126,7 +127,6 @@ def update_province_dashboard(
     ):
         raise PreventUpdate
 
-    start_time = time.perf_counter()
     options = options or []
 
     include_zero = "include_zero" in options
@@ -235,12 +235,10 @@ def update_province_dashboard(
         subject,
     )
 
-    end_time = time.perf_counter()
-    print(f"Thời gian thực hiện truy vấn theo tỉnh thành: {(end_time - start_time):.4} s")
-
     # ---------------------------------------------------------
     # RETURN
     # ---------------------------------------------------------
+
     return (
         rank_text,
         mean_text,

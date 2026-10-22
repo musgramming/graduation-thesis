@@ -6,6 +6,7 @@ from .list_of_id import pid
 
 from data import TO_HOP
 from utils.build_script import display_graph_and_table
+from utils.check_performance import export_performance
 from utils.exception import todo, unimplemented, unreachable
 from utils.persistent import make_persistent
 
@@ -355,6 +356,7 @@ def update_combination_details(selected_comb, stored_data):
     State(pid("stored-results"), "data"),
     prevent_initial_call=True,
 )
+@export_performance
 def display_analysis_without_sbd(
     n,
     main_score_text,

@@ -1,5 +1,4 @@
 from __future__ import annotations
-import time
 from functools import lru_cache
 from typing import Literal
 
@@ -251,7 +250,7 @@ def transform_scores(year: int, combs: list[str], mode: str) -> pl.LazyFrame:
 
 
 
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=8)
 def _cached_display_graph_and_table(
     year: int, 
     self_score : float, 
@@ -300,8 +299,6 @@ def _cached_display_graph_and_table(
         unreachable(
             f"Không tồn tại mode {mode}"
         )
-
-    start = time.time()
 
     combs = list(combs)
 
@@ -1008,40 +1005,37 @@ def _cached_display_graph_and_table(
         ),
     ], className="shadow-sm border-0 mb-4")
 
-    end = time.time()
 
-    print(f"Thời gian thực hiện: {(end - start):.4} s")
 
     # ================================================================
     # 13. FINAL DASHBOARD
     # ================================================================
 
-    return html.Div([
+    final_layout = html.Div([
         header,
         kpi_cards,
         insight,
         overall_section,
         html.Div(
             [
-                html.H4(
-                    "Phân tích chi tiết",
-                    className="fw-bold mb-3",
-                ),
+                html.H4("Phân tích chi tiết", className="fw-bold mb-3"),
                 local_analysis,
             ]
         ),
-
         html.Div(
             [
-                html.H4(
-                    "Dữ liệu tham chiếu",
-                    className="fw-bold mb-3",
-                ),
+                html.H4("Dữ liệu tham chiếu", className="fw-bold mb-3"),
                 top20_table,
             ]
         ),
-
     ])
+
+
+    # ================================================================
+    # DỌN RÁC NGAY TRƯỚC KHI TRẢ VỀ GIAO DIỆN CACHE
+    # ================================================================
+
+    return final_layout
 
 
 

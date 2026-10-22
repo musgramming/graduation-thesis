@@ -126,10 +126,15 @@ COMB_OPTIONS = [
 
 
 BAN_DO_HANH_CHINH = gpd.read_file(
-    BASE_GRAPH_DIR / "ban_do_hanh_chinh_dashboard.gpkg", 
+    BASE_GRAPH_DIR / "ban_do_hanh_chinh.geojson", 
     columns=["ten_tinh", "geometry"]
 )
 
+# Chỉ rút gọn độ chi tiết của cột geometry, giữ nguyên vẹn cột ten_tinh
+BAN_DO_HANH_CHINH["geometry"] = BAN_DO_HANH_CHINH["geometry"].simplify(
+    tolerance=0.005, 
+    preserve_topology=True
+)
 
 BAN_DO_HANH_CHINH_GEOJSON = json.loads(
     BAN_DO_HANH_CHINH.to_json()

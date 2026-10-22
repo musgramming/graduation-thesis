@@ -2,7 +2,6 @@ from dash import callback, Input, Output, State, html, clientside_callback, Clie
 import dash_bootstrap_components as dbc
 import polars as pl
 
-
 from .list_of_id import pid
 
 from data import (
@@ -13,6 +12,7 @@ from data import (
 )
 
 from utils.build_script import display_graph_and_table
+from utils.check_performance import export_performance
 from utils.exception import todo, unimplemented, unreachable
 
 
@@ -438,6 +438,7 @@ clientside_callback(
     ],
     prevent_initial_call=True,
 )
+@export_performance
 def analysis_callback(n, score_text, year, floor_score, combs, mode):
     """
     Thực hiện phân tích dữ liệu và hiển thị kết quả.
